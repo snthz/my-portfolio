@@ -1,0 +1,50 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { content, getLang } from '../data/profile';
+
+const t = content[getLang(Astro.currentLocale)];
+---
+
+<section id="experience" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
+  <SectionHeading number="03" title={t.sections.experience} />
+
+  <div class="relative mt-12 pl-8 sm:pl-10" data-timeline>
+    <!-- Línea vertical: se dibuja con GSAP al hacer scroll -->
+    <span
+      class="absolute top-1 bottom-1 left-[5px] w-px bg-line sm:left-[7px]"
+      aria-hidden="true"></span>
+    <span
+      class="absolute top-1 bottom-1 left-[5px] w-px bg-accent sm:left-[7px]"
+      aria-hidden="true"
+      data-timeline-line></span>
+
+    <ol class="space-y-14">
+      {
+        t.experience.map((job) => (
+          <li class="relative" data-animate data-timeline-item>
+            <span
+              class="absolute top-1.5 -left-8 size-[11px] rounded-full border-2 border-accent bg-base sm:-left-10 sm:size-[15px]"
+              aria-hidden="true"
+            />
+            <p class="font-mono text-xs text-accent">{job.period}</p>
+            <h3 class="mt-2 text-lg font-semibold text-bright">
+              {job.role}
+              <span class="text-muted"> · {job.company}</span>
+            </h3>
+            <p class="mt-1 text-xs text-muted">{job.location}</p>
+            <p class="mt-3 max-w-2xl text-sm leading-relaxed text-soft">
+              {job.description}
+            </p>
+            <ul class="mt-4 flex flex-wrap gap-2">
+              {job.tags.map((tag) => (
+                <li class="rounded-full border border-line px-3 py-1 font-mono text-xs text-muted">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

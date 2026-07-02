@@ -1,0 +1,46 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { profile, content, getLang } from '../data/profile';
+
+const t = content[getLang(Astro.currentLocale)];
+---
+
+<section id="contact" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
+  <SectionHeading number="05" title={t.sections.contact} />
+  <div class="mt-8 max-w-xl">
+    <p class="leading-relaxed text-soft" data-animate>
+      {t.contactBlurb}
+    </p>
+    <a
+      href={`mailto:${profile.email}`}
+      class="mt-8 inline-block rounded-full border border-line bg-surface px-6 py-3 font-mono text-sm text-bright transition-colors hover:border-accent/50 hover:text-accent"
+      data-animate
+    >
+      {profile.email}
+    </a>
+  </div>
+</section>
+
+<footer class="border-t border-line/60">
+  <div
+    class="mx-auto flex max-w-4xl flex-col items-center justify-between gap-3 px-6 py-8 sm:flex-row"
+  >
+    <p class="font-mono text-xs text-muted">
+      © {new Date().getFullYear()} {profile.name}
+    </p>
+    <div class="flex gap-5">
+      {
+        profile.socials.map((social) => (
+          <a
+            href={social.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="font-mono text-xs text-muted transition-colors hover:text-accent"
+          >
+            {social.label}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</footer>

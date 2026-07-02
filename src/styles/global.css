@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --color-base: #09090b;
+  --color-surface: #101013;
+  --color-line: #1f1f23;
+  --color-muted: #71717a;
+  --color-soft: #a1a1aa;
+  --color-bright: #f4f4f5;
+  --color-accent: #ffffff;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-base);
+  color: var(--color-soft);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-bright);
+  color: var(--color-base);
+}
+
+/* Sutil textura de ruido sobre el fondo */
+.noise::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Estado inicial de los elementos animados con GSAP.
+   Si JS no carga o el usuario prefiere menos movimiento, todo queda visible. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-animate] {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  html.js [data-timeline-line] {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+}

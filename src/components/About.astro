@@ -1,0 +1,31 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { content, stack, getLang } from '../data/profile';
+
+const t = content[getLang(Astro.currentLocale)];
+---
+
+<section id="about" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
+  <SectionHeading number="01" title={t.sections.about} />
+  <div class="mt-8 max-w-2xl space-y-4">
+    {
+      t.about.map((paragraph) => (
+        <p class="leading-relaxed text-soft" data-animate>
+          {paragraph}
+        </p>
+      ))
+    }
+  </div>
+  <ul class="mt-10 flex max-w-2xl flex-wrap gap-2">
+    {
+      stack.map((tech) => (
+        <li
+          class="rounded-full border border-line bg-surface px-3.5 py-1.5 font-mono text-xs text-soft transition-colors hover:border-accent/40 hover:text-accent"
+          data-animate
+        >
+          {tech}
+        </li>
+      ))
+    }
+  </ul>
+</section>

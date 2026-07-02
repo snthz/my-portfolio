@@ -1,0 +1,62 @@
+---
+import { profile, content, getLang } from '../data/profile';
+
+const lang = getLang(Astro.currentLocale);
+const t = content[lang];
+---
+
+<section
+  id="top"
+  class="mx-auto flex min-h-svh max-w-4xl flex-col justify-center px-6 pt-24"
+>
+  <img
+    src={profile.photo}
+    alt={profile.name}
+    width="640"
+    height="640"
+    loading="eager"
+    class="size-20 rounded-2xl border border-line object-cover sm:size-24"
+    data-animate
+  />
+  <p class="mt-8 font-mono text-sm text-soft" data-animate>
+    {t.greeting}
+  </p>
+  <h1
+    class="mt-4 text-5xl font-bold tracking-tight text-bright sm:text-7xl"
+    data-animate
+  >
+    {profile.name}
+  </h1>
+  <h2
+    class="mt-3 text-2xl font-semibold tracking-tight text-muted sm:text-4xl"
+    data-animate
+  >
+    {t.role}
+  </h2>
+  <p class="mt-6 max-w-xl leading-relaxed text-soft" data-animate>
+    {t.tagline}
+  </p>
+  <div class="mt-10 flex flex-wrap items-center gap-4" data-animate>
+    <a
+      href={`mailto:${profile.email}`}
+      class="rounded-full border border-line bg-surface px-5 py-2.5 text-sm font-medium text-bright transition-colors hover:border-soft/50"
+    >
+      {t.cta}
+    </a>
+    {
+      profile.socials.map((social) => (
+        <a
+          href={social.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-mono text-sm text-muted transition-colors hover:text-bright"
+        >
+          {social.label} ↗
+        </a>
+      ))
+    }
+  </div>
+  <p class="mt-16 font-mono text-xs text-muted/70 select-none" data-animate>
+    {'// '}{t.gameHint}
+  </p>
+</section>

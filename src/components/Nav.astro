@@ -1,0 +1,132 @@
+---
+import { content, getLang } from '../data/profile';
+
+const lang = getLang(Astro.currentLocale);
+const t = content[lang].nav;
+const home = lang === 'es' ? '/es/' : '/';
+
+const links = [
+  { href: `${home}#about`, label: t.about },
+  { href: `${home}#projects`, label: t.projects },
+  { href: `${home}#experience`, label: t.experience },
+  { href: `${home}#contact`, label: t.contact },
+];
+
+const languages = [
+  { code: 'en', href: '/' },
+  { code: 'es', href: '/es/' },
+] as const;
+---
+
+<header
+  class="fixed top-0 z-40 w-full border-b border-line/60 bg-base/70 backdrop-blur-md"
+>
+  <nav class="mx-auto max-w-4xl px-6" data-nav>
+    <div class="flex items-center justify-between py-4">
+      <a
+        href={`${home}#top`}
+        class="font-mono text-sm font-semibold tracking-tight text-bright transition-colors hover:text-soft"
+      >
+        axl.santos
+      </a>
+
+      <div class="flex items-center gap-6">
+        <ul class="hidden items-center gap-6 sm:flex">
+          {
+            links.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  class="text-sm text-muted transition-colors hover:text-bright"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="flex items-center gap-2 font-mono text-xs">
+          {
+            languages.map((l, i) => (
+              <>
+                {i > 0 && <span class="text-line">/</span>}
+                <a
+                  href={l.href}
+                  class:list={[
+                    'uppercase transition-colors hover:text-bright',
+                    l.code === lang ? 'text-bright' : 'text-muted',
+                  ]}
+                >
+                  {l.code}
+                </a>
+              </>
+            ))
+          }
+        </div>
+
+        <button
+          type="button"
+          class="flex size-8 flex-col items-center justify-center gap-1.5 sm:hidden"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+          aria-label="Menu"
+          data-menu-toggle
+        >
+          <span
+            class="h-px w-5 bg-bright transition-transform duration-300"
+            data-menu-bar-top></span>
+          <span
+            class="h-px w-5 bg-bright transition-transform duration-300"
+            data-menu-bar-bottom></span>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden pb-6 sm:hidden" data-menu-panel>
+      <ul class="flex flex-col gap-4 border-t border-line/60 pt-5">
+        {
+          links.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                class="block text-sm text-soft transition-colors hover:text-bright"
+                data-menu-link
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<script>
+  const toggle = document.querySelector('[data-menu-toggle]')!;
+  const panel = document.querySelector('[data-menu-panel]')!;
+  const barTop = document.querySelector('[data-menu-bar-top]') as HTMLElement;
+  const barBottom = document.querySelector(
+    '[data-menu-bar-bottom]'
+  ) as HTMLElement;
+
+  function setOpen(open: boolean) {
+    toggle.setAttribute('aria-expanded', String(open));
+    panel.classList.toggle('hidden', !open);
+    barTop.style.transform = open
+      ? 'translateY(3.5px) rotate(45deg)'
+      : '';
+    barBottom.style.transform = open
+      ? 'translateY(-3.5px) rotate(-45deg)'
+      : '';
+  }
+
+  toggle.addEventListener('click', () => {
+    setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+  });
+
+  for (const link of document.querySelectorAll('[data-menu-link]')) {
+    link.addEventListener('click', () => setOpen(false));
+  }
+</script>

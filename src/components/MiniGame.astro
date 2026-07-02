@@ -1,0 +1,391 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { content, getLang } from '../data/profile';
+
+const t = content[getLang(Astro.currentLocale)];
+const g = t.game;
+---
+
+<section id="game" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
+  <SectionHeading number="04" title={g.title} />
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-3" data-animate>
+    <p class="text-sm text-muted" data-game-instructions>{g.instructions}</p>
+    <button
+      type="button"
+      class="font-mono text-xs text-muted underline decoration-line underline-offset-4 transition-colors hover:text-bright"
+      data-game-toggle
+      data-label-disable={g.disable}
+      data-label-enable={g.enable}
+    >
+      {g.disable}
+    </button>
+  </div>
+
+  <div data-game-body>
+    <div
+      class="relative mt-6 overflow-hidden rounded-xl border border-line bg-surface/60"
+      data-animate
+    >
+      <canvas
+        class="block h-[380px] w-full cursor-crosshair touch-none select-none"
+        data-game-canvas></canvas>
+      <p
+        class="pointer-events-none absolute top-4 right-5 font-mono text-xs text-muted"
+        data-game-progress
+      >
+      </p>
+      <button
+        type="button"
+        class="absolute bottom-3 right-5 hidden font-mono text-xs text-muted transition-colors hover:text-bright"
+        data-game-replay
+      >
+        ⟳ {g.replay}
+      </button>
+    </div>
+
+    <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+      {
+        g.facts.map((fact, i) => (
+          <li
+            class="rounded-xl border border-line px-4 py-3 font-mono text-xs transition-colors duration-500"
+            data-fact
+            data-index={i}
+          >
+            <span class="text-muted/50 select-none" data-fact-locked>
+              ▒▒▒▒▒▒▒▒▒▒▒▒
+            </span>
+            <span class="hidden text-soft" data-fact-text>
+              {fact}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="mt-6 hidden font-mono text-sm text-bright" data-game-complete>
+      {g.complete}
+    </p>
+  </div>
+</section>
+
+<script>
+  const STORAGE_REVEALED = 'minigame-revealed';
+  const STORAGE_DISABLED = 'minigame-disabled';
+
+  const canvas = document.querySelector(
+    '[data-game-canvas]'
+  ) as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  const body = document.querySelector('[data-game-body]') as HTMLElement;
+  const toggleBtn = document.querySelector(
+    '[data-game-toggle]'
+  ) as HTMLButtonElement;
+  const replayBtn = document.querySelector(
+    '[data-game-replay]'
+  ) as HTMLButtonElement;
+  const progressEl = document.querySelector('[data-game-progress]')!;
+  const completeEl = document.querySelector('[data-game-complete]')!;
+  const chips = [...document.querySelectorAll('[data-fact]')] as HTMLElement[];
+  const total = chips.length;
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+
+  // ── Estado persistente ───────────────────────────────────────
+  let revealed = new Set<number>(
+    JSON.parse(localStorage.getItem(STORAGE_REVEALED) ?? '[]') as number[]
+  );
+
+  interface Orb {
+    index: number;
+    x: number;
+    y: number;
+    r: number;
+    vx: number;
+    vy: number;
+    phase: number;
+  }
+
+  interface Shot {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    life: number;
+  }
+
+  interface Burst {
+    x: number;
+    y: number;
+    startedAt: number;
+  }
+
+  const BURST_MS = 500;
+  let orbs: Orb[] = [];
+  let shots: Shot[] = [];
+  let bursts: Burst[] = [];
+  let width = 0;
+  let height = 0;
+  let shipX = 0;
+  let aimX = 0;
+  let aimY = 0;
+  let running = false;
+  let rafId = 0;
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = canvas.clientWidth;
+    height = canvas.clientHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    shipX = width / 2;
+    aimX = width / 2;
+    aimY = 0;
+  }
+
+  function spawnOrbs() {
+    orbs = [];
+    for (let i = 0; i < total; i++) {
+      if (revealed.has(i)) continue;
+      orbs.push({
+        index: i,
+        x: 40 + Math.random() * (width - 80),
+        y: 40 + Math.random() * (height * 0.5),
+        r: 16,
+        vx: (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.4),
+        vy: (Math.random() < 0.5 ? -1 : 1) * (0.2 + Math.random() * 0.3),
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  function syncChips() {
+    for (const chip of chips) {
+      const i = Number(chip.dataset.index);
+      const unlocked = revealed.has(i);
+      chip.querySelector('[data-fact-locked]')!.classList.toggle(
+        'hidden',
+        unlocked
+      );
+      chip.querySelector('[data-fact-text]')!.classList.toggle(
+        'hidden',
+        !unlocked
+      );
+      chip.classList.toggle('bg-surface', unlocked);
+    }
+    progressEl.textContent = `${revealed.size}/${total}`;
+    const done = revealed.size === total;
+    completeEl.classList.toggle('hidden', !done);
+    replayBtn.classList.toggle('hidden', !done);
+  }
+
+  function reveal(index: number) {
+    revealed.add(index);
+    localStorage.setItem(STORAGE_REVEALED, JSON.stringify([...revealed]));
+    syncChips();
+  }
+
+  // ── Render ───────────────────────────────────────────────────
+  function draw(time: number) {
+    ctx.clearRect(0, 0, width, height);
+
+    // Orbes con "?" y parpadeo suave
+    for (const o of orbs) {
+      const pulse = 0.75 + 0.25 * Math.sin(time / 900 + o.phase);
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(161, 161, 170, ${0.8 * pulse})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = `rgba(244, 244, 245, ${0.06 * pulse})`;
+      ctx.fill();
+      ctx.fillStyle = `rgba(244, 244, 245, ${0.9 * pulse})`;
+      ctx.font = '12px "JetBrains Mono Variable", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('?', o.x, o.y + 0.5);
+
+      o.x += o.vx;
+      o.y += o.vy;
+      if (o.x < o.r || o.x > width - o.r) o.vx *= -1;
+      if (o.y < o.r || o.y > height * 0.65) o.vy *= -1;
+    }
+
+    // Disparos
+    for (const s of shots) {
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - s.vx * 1.6, s.y - s.vy * 1.6);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      s.x += s.vx;
+      s.y += s.vy;
+      s.life--;
+    }
+    shots = shots.filter(
+      (s) => s.life > 0 && s.x > -10 && s.x < width + 10 && s.y > -10
+    );
+
+    // Colisiones
+    for (const s of shots) {
+      for (const o of orbs) {
+        if (Math.hypot(s.x - o.x, s.y - o.y) < o.r + 2) {
+          bursts.push({ x: o.x, y: o.y, startedAt: time });
+          reveal(o.index);
+          orbs = orbs.filter((other) => other !== o);
+          s.life = 0;
+          break;
+        }
+      }
+    }
+
+    // Anillos de explosión
+    bursts = bursts.filter((b) => time - b.startedAt < BURST_MS);
+    for (const b of bursts) {
+      const p = (time - b.startedAt) / BURST_MS;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 6 + p * 30, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(244, 244, 245, ${0.6 * (1 - p)})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 2 + p * 14, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(244, 244, 245, ${0.3 * (1 - p)})`;
+      ctx.stroke();
+    }
+
+    // Nave: triángulo orientado hacia el cursor
+    const shipY = height - 26;
+    shipX += (aimX - shipX) * 0.12;
+    const angle = Math.atan2(aimY - shipY, aimX - shipX);
+    ctx.save();
+    ctx.translate(shipX, shipY);
+    ctx.rotate(angle + Math.PI / 2);
+    ctx.beginPath();
+    ctx.moveTo(0, -12);
+    ctx.lineTo(8, 10);
+    ctx.lineTo(0, 5);
+    ctx.lineTo(-8, 10);
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function loop(time: number) {
+    draw(time);
+    if (running) rafId = requestAnimationFrame(loop);
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function stop() {
+    running = false;
+    cancelAnimationFrame(rafId);
+  }
+
+  // ── Input ────────────────────────────────────────────────────
+  canvas.addEventListener('pointermove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    aimX = e.clientX - rect.left;
+    aimY = e.clientY - rect.top;
+  });
+
+  canvas.addEventListener('pointerdown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    aimX = e.clientX - rect.left;
+    aimY = e.clientY - rect.top;
+
+    // Sin animaciones, el clic directo sobre un orbe lo revela
+    if (reducedMotion) {
+      const hit = orbs.find((o) => Math.hypot(aimX - o.x, aimY - o.y) < o.r + 6);
+      if (hit) {
+        reveal(hit.index);
+        orbs = orbs.filter((o) => o !== hit);
+        draw(0);
+      }
+      return;
+    }
+
+    const shipY = height - 26;
+    const angle = Math.atan2(aimY - shipY, aimX - shipX);
+    const speed = 9;
+    shots.push({
+      x: shipX,
+      y: shipY - 8,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 120,
+    });
+  });
+
+  replayBtn.addEventListener('click', () => {
+    revealed = new Set();
+    localStorage.removeItem(STORAGE_REVEALED);
+    syncChips();
+    spawnOrbs();
+  });
+
+
+  function setDisabled(disabled: boolean) {
+    body.classList.toggle('hidden', disabled);
+    toggleBtn.textContent = disabled
+      ? toggleBtn.dataset.labelEnable!
+      : toggleBtn.dataset.labelDisable!;
+    if (disabled) {
+      stop();
+      localStorage.setItem(STORAGE_DISABLED, '1');
+    } else {
+      localStorage.removeItem(STORAGE_DISABLED);
+      resize();
+      spawnOrbs();
+      if (!reducedMotion) start();
+      else draw(0);
+    }
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    setDisabled(!body.classList.contains('hidden'));
+  });
+
+  // ── Init ─────────────────────────────────────────────────────
+  const initiallyDisabled = localStorage.getItem(STORAGE_DISABLED) === '1';
+  resize();
+  spawnOrbs();
+  syncChips();
+
+  if (initiallyDisabled) {
+    setDisabled(true);
+  } else if (reducedMotion) {
+    draw(0);
+  } else {
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (body.classList.contains('hidden')) return;
+        if (entry.isIntersecting) start();
+        else stop();
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(canvas);
+  }
+
+  let resizeTimer: ReturnType<typeof setTimeout>;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (body.classList.contains('hidden')) return;
+      resize();
+      spawnOrbs();
+      if (reducedMotion) draw(0);
+    }, 150);
+  });
+</script>

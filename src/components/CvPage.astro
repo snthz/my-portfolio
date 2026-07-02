@@ -29,14 +29,14 @@ const contact = [
     <header
       class="fixed top-0 z-40 w-full border-b border-line/60 bg-base/70 backdrop-blur-md print:hidden"
     >
-      <nav class="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+      <nav class="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
         <a
           href={home}
           class="font-mono text-sm text-muted transition-colors hover:text-bright"
         >
-          ← {cv.back}
+          ←<span class="hidden sm:inline"> {cv.back}</span>
         </a>
-        <div class="flex items-center gap-5">
+        <div class="flex items-center gap-4 sm:gap-5">
           <div class="flex items-center gap-2 font-mono text-xs">
             <a
               href="/cv"
@@ -67,17 +67,17 @@ const contact = [
 
     <!-- Hoja del CV (estructura estilo Harvard) -->
     <main
-      class="cv-sheet mx-auto my-24 max-w-[830px] bg-white px-10 py-12 text-zinc-900 shadow-2xl sm:px-14 print:m-0 print:max-w-none print:p-0 print:shadow-none"
+      class="cv-sheet mx-auto my-20 w-[calc(100%-2rem)] max-w-207.5 bg-white px-5 py-8 text-zinc-900 shadow-2xl sm:my-24 sm:px-14 sm:py-12 print:m-0 print:w-full print:max-w-none print:p-0 print:shadow-none"
     >
       <!-- Encabezado -->
       <header class="text-center">
-        <h1 class="text-[26px] font-bold tracking-wide uppercase">
+        <h1 class="text-[21px] font-bold tracking-wide uppercase sm:text-[26px]">
           {profile.fullName}
         </h1>
         <p class="mt-0.5 text-[15px] tracking-widest text-zinc-600 uppercase">
           {cv.title}
         </p>
-        <p class="mt-2 text-[12.5px] leading-relaxed text-zinc-700">
+        <p class="mt-2 text-[12.5px] leading-relaxed break-words text-zinc-700">
           {
             contact.map((item, i) => (
               <>
@@ -108,17 +108,13 @@ const contact = [
           {
             cv.experience.map((job) => (
               <article class="break-inside-avoid">
-                <div class="flex items-baseline justify-between gap-4">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4">
                   <h3 class="text-[13.5px] font-bold">{job.company}</h3>
-                  <p class="text-[12.5px] whitespace-nowrap text-zinc-700">
-                    {job.location}
-                  </p>
+                  <p class="text-[12.5px] text-zinc-700">{job.location}</p>
                 </div>
-                <div class="flex items-baseline justify-between gap-4">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4">
                   <p class="text-[13px] italic">{job.role}</p>
-                  <p class="text-[12.5px] whitespace-nowrap text-zinc-700">
-                    {job.period}
-                  </p>
+                  <p class="text-[12.5px] text-zinc-700">{job.period}</p>
                 </div>
                 <ul class="mt-1 ml-5 list-disc space-y-0.5 text-[12.5px] leading-snug">
                   {job.bullets.map((bullet) => (
@@ -138,17 +134,13 @@ const contact = [
           {
             cv.education.map((edu) => (
               <article class="break-inside-avoid">
-                <div class="flex items-baseline justify-between gap-4">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4">
                   <h3 class="text-[13.5px] font-bold">{edu.school}</h3>
-                  <p class="text-[12.5px] whitespace-nowrap text-zinc-700">
-                    {edu.location}
-                  </p>
+                  <p class="text-[12.5px] text-zinc-700">{edu.location}</p>
                 </div>
-                <div class="flex items-baseline justify-between gap-4">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4">
                   <p class="text-[13px] italic">{edu.degree}</p>
-                  <p class="text-[12.5px] whitespace-nowrap text-zinc-700">
-                    {edu.period}
-                  </p>
+                  <p class="text-[12.5px] text-zinc-700">{edu.period}</p>
                 </div>
               </article>
             ))

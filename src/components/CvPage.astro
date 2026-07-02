@@ -1,0 +1,221 @@
+---
+import '../styles/global.css';
+import { profile, content, getLang } from '../data/profile';
+
+const lang = getLang(Astro.currentLocale);
+const t = content[lang];
+const cv = t.cv;
+const home = lang === 'es' ? '/es/' : '/';
+
+const contact = [
+  { label: t.location },
+  { label: profile.email, href: `mailto:${profile.email}` },
+  { label: profile.github, href: `https://${profile.github}` },
+  { label: profile.linkedin, href: `https://${profile.linkedin}` },
+  { label: profile.website, href: `https://${profile.website}` },
+];
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>{`${profile.name} — CV`}</title>
+  </head>
+  <body>
+    <!-- Barra de acciones (no se imprime) -->
+    <header
+      class="fixed top-0 z-40 w-full border-b border-line/60 bg-base/70 backdrop-blur-md print:hidden"
+    >
+      <nav class="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+        <a
+          href={home}
+          class="font-mono text-sm text-muted transition-colors hover:text-bright"
+        >
+          ← {cv.back}
+        </a>
+        <div class="flex items-center gap-5">
+          <div class="flex items-center gap-2 font-mono text-xs">
+            <a
+              href="/cv"
+              class:list={[
+                'uppercase transition-colors hover:text-bright',
+                lang === 'en' ? 'text-bright' : 'text-muted',
+              ]}>en</a
+            >
+            <span class="text-line">/</span>
+            <a
+              href="/es/cv"
+              class:list={[
+                'uppercase transition-colors hover:text-bright',
+                lang === 'es' ? 'text-bright' : 'text-muted',
+              ]}>es</a
+            >
+          </div>
+          <button
+            type="button"
+            class="rounded-full bg-bright px-5 py-2 text-sm font-medium text-base transition-opacity hover:opacity-85"
+            data-print
+          >
+            {cv.download} ↓
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Hoja del CV (estructura estilo Harvard) -->
+    <main
+      class="cv-sheet mx-auto my-24 max-w-[830px] bg-white px-10 py-12 text-zinc-900 shadow-2xl sm:px-14 print:m-0 print:max-w-none print:p-0 print:shadow-none"
+    >
+      <!-- Encabezado -->
+      <header class="text-center">
+        <h1 class="text-[26px] font-bold tracking-wide uppercase">
+          {profile.fullName}
+        </h1>
+        <p class="mt-0.5 text-[15px] tracking-widest text-zinc-600 uppercase">
+          {cv.title}
+        </p>
+        <p class="mt-2 text-[12.5px] leading-relaxed text-zinc-700">
+          {
+            contact.map((item, i) => (
+              <>
+                {i > 0 && <span class="mx-1 text-zinc-400">|</span>}
+                {item.href ? (
+                  <a href={item.href} class="hover:underline">
+                    {item.label}
+                  </a>
+                ) : (
+                  item.label
+                )}
+              </>
+            ))
+          }
+        </p>
+      </header>
+
+      <!-- Resumen -->
+      <section class="mt-7">
+        <h2 class="cv-heading">{cv.sections.summary}</h2>
+        <p class="mt-2 text-[13px] leading-relaxed">{cv.summary}</p>
+      </section>
+
+      <!-- Experiencia -->
+      <section class="mt-6">
+        <h2 class="cv-heading">{cv.sections.experience}</h2>
+        <div class="mt-2 space-y-4">
+          {
+            cv.experience.map((job) => (
+              <article class="break-inside-avoid">
+                <div class="flex items-baseline justify-between gap-4">
+                  <h3 class="text-[13.5px] font-bold">{job.company}</h3>
+                  <p class="text-[12.5px] whitespace-nowrap text-zinc-700">
+                    {job.location}
+                  </p>
+                </div>
+                <div class="flex items-baseline justify-between gap-4">
+                  <p class="text-[13px] italic">{job.role}</p>
+                  <p class="text-[12.5px] whitespace-nowrap text-zinc-700">
+                    {job.period}
+                  </p>
+                </div>
+                <ul class="mt-1 ml-5 list-disc space-y-0.5 text-[12.5px] leading-snug">
+                  {job.bullets.map((bullet) => (
+                    <li>{bullet}</li>
+                  ))}
+                </ul>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Educación -->
+      <section class="mt-6">
+        <h2 class="cv-heading">{cv.sections.education}</h2>
+        <div class="mt-2 space-y-2">
+          {
+            cv.education.map((edu) => (
+              <article class="break-inside-avoid">
+                <div class="flex items-baseline justify-between gap-4">
+                  <h3 class="text-[13.5px] font-bold">{edu.school}</h3>
+                  <p class="text-[12.5px] whitespace-nowrap text-zinc-700">
+                    {edu.location}
+                  </p>
+                </div>
+                <div class="flex items-baseline justify-between gap-4">
+                  <p class="text-[13px] italic">{edu.degree}</p>
+                  <p class="text-[12.5px] whitespace-nowrap text-zinc-700">
+                    {edu.period}
+                  </p>
+                </div>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Habilidades -->
+      <section class="mt-6">
+        <h2 class="cv-heading">{cv.sections.skills}</h2>
+        <ul class="mt-2 space-y-0.5 text-[12.5px] leading-relaxed">
+          {
+            cv.skills.map((group) => (
+              <li>
+                <strong>{group.label}:</strong> {group.items}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <!-- Información adicional -->
+      <section class="mt-6">
+        <h2 class="cv-heading">{cv.sections.additional}</h2>
+        <ul class="mt-2 space-y-0.5 text-[12.5px] leading-relaxed">
+          {
+            cv.additional.map((group) => (
+              <li>
+                <strong>{group.label}:</strong> {group.items}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </main>
+
+    <style>
+      .cv-sheet {
+        font-family: Georgia, 'Times New Roman', serif;
+      }
+
+      .cv-heading {
+        border-bottom: 1px solid #52525c;
+        padding-bottom: 2px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      @page {
+        size: letter;
+        margin: 0.55in;
+      }
+
+      @media print {
+        html,
+        body {
+          background: #fff !important;
+        }
+      }
+    </style>
+
+    <script>
+      document
+        .querySelector('[data-print]')!
+        .addEventListener('click', () => window.print());
+    </script>
+  </body>
+</html>

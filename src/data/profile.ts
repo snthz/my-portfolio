@@ -8,9 +8,14 @@ export type Lang = 'en' | 'es';
 
 export const profile = {
   name: 'Axl Santos',
+  fullName: 'Axl Enrique Santos Hernandez',
   email: 'axlsntz.dev@gmail.com',
+  website: 'axlsantos.dev',
+  github: 'github.com/snthz',
+  linkedin: 'linkedin.com/in/axl-santos',
   photo: '/me.png',
   socials: [
+    { label: 'GitHub', url: 'https://github.com/snthz' },
     { label: 'LinkedIn', url: 'https://www.linkedin.com/in/axl-santos/' },
     { label: 'Vallen', url: 'https://vallen.app/' },
     { label: 'Fallxn Studio', url: 'https://fallxn.studio/en' },
@@ -50,6 +55,37 @@ export interface Experience {
   tags: string[];
 }
 
+export interface CvExperience {
+  role: string;
+  company: string;
+  location: string;
+  period: string;
+  bullets: string[];
+}
+
+export interface Cv {
+  title: string;
+  download: string;
+  back: string;
+  summary: string;
+  sections: {
+    summary: string;
+    experience: string;
+    education: string;
+    skills: string;
+    additional: string;
+  };
+  experience: CvExperience[];
+  education: {
+    degree: string;
+    school: string;
+    location: string;
+    period: string;
+  }[];
+  skills: { label: string; items: string }[];
+  additional: { label: string; items: string }[];
+}
+
 export interface Content {
   greeting: string;
   role: string;
@@ -77,6 +113,7 @@ export interface Content {
   };
   projects: Project[];
   experience: Experience[];
+  cv: Cv;
 }
 
 export const content: Record<Lang, Content> = {
@@ -210,6 +247,128 @@ export const content: Record<Lang, Content> = {
         tags: ['NestJS', 'Next.js', 'Firebase', 'MongoDB', 'WebSockets'],
       },
     ],
+    cv: {
+      title: 'Software Engineer',
+      download: 'Download PDF',
+      back: 'back to site',
+      summary:
+        'Full-stack software engineer with experience building and scaling web applications using Go, TypeScript, and modern frameworks like Next.js. Skilled in designing efficient APIs, optimizing system performance, and delivering reliable production-ready solutions.',
+      sections: {
+        summary: 'Summary',
+        experience: 'Professional Experience',
+        education: 'Education',
+        skills: 'Technical Skills',
+        additional: 'Additional Information',
+      },
+      experience: [
+        {
+          role: 'Software Developer',
+          company: 'San Services',
+          location: 'San Pedro Sula, Honduras',
+          period: 'Jun 2025 — Present',
+          bullets: [
+            'Migrated legacy applications from Lucee/ColdFusion to Go, improving performance, scalability, and maintainability.',
+            'Developed full-stack applications using Next.js and Strapi to streamline content management and feature delivery.',
+            'Built and optimized RESTful APIs in Go, enhancing backend efficiency and system responsiveness.',
+            'Contributed to modernizing legacy systems into scalable, modular architectures.',
+          ],
+        },
+        {
+          role: 'Founder & Developer',
+          company: 'Vallen',
+          location: 'Remote',
+          period: '2024 — Present',
+          bullets: [
+            'Designed, built, and operate a digital product catalog SaaS with WhatsApp integration, owning the full stack from frontend to infrastructure.',
+            'Implemented real-time order management, an analytics dashboard, and an AI-powered theme generator.',
+            'Run the complete product lifecycle: payments, deployments, monitoring, and customer feedback.',
+          ],
+        },
+        {
+          role: 'Founder',
+          company: 'Fallxn Studio',
+          location: 'Remote',
+          period: 'Aug 2023 — Present',
+          bullets: [
+            'Deliver custom websites and software for businesses across Latin America, the US, and Europe — 15+ projects shipped.',
+            'Lead projects end-to-end: requirements, design, development, deployment, and maintenance.',
+            'Focus on usability and performance, with average load times under 1.2 seconds.',
+          ],
+        },
+        {
+          role: 'Software Engineer',
+          company: 'Lumen Energy Solutions',
+          location: 'Honduras',
+          period: 'May 2024 — Jun 2025',
+          bullets: [
+            'Developed full-stack applications for energy monitoring systems using Angular, React, and Go.',
+            'Processed and analyzed telemetry data to support real-time insights and system optimization.',
+            'Built backend services and APIs to handle data ingestion, storage, and visualization.',
+            'Improved system reliability and performance by optimizing database queries and backend logic.',
+            'Contributed to internal tools and dashboards for monitoring electrical and energy metrics.',
+          ],
+        },
+        {
+          role: 'Software Developer',
+          company: 'Naranja y Media',
+          location: 'Remote',
+          period: 'Sep 2023 — Jan 2025',
+          bullets: [
+            'Developed full-stack web applications using React, Next.js, NestJS, and MongoDB.',
+            'Designed and implemented scalable database structures for dynamic applications.',
+            'Built and integrated APIs to support frontend functionality and third-party services.',
+            'Used Docker to containerize applications, improving deployment consistency and scalability.',
+            'Collaborated on delivering custom solutions tailored to client requirements.',
+          ],
+        },
+        {
+          role: 'Technical Support',
+          company: 'VJ Innovations',
+          location: 'San Pedro Sula, Honduras',
+          period: 'Sep 2016 — Jan 2020',
+          bullets: [
+            'Configured and maintained network infrastructure using MikroTik, Cisco, and Ubuntu systems.',
+            'Installed and supported fiber optic networks and wireless connectivity solutions.',
+            'Diagnosed and resolved connectivity and hardware issues for end users.',
+            'Provided technical support and ensured stable network performance across deployments.',
+          ],
+        },
+      ],
+      education: [
+        {
+          degree: 'B.S. in Systems Engineering',
+          school: 'Universidad Nacional Autónoma de Honduras',
+          location: 'Honduras',
+          period: 'Jan 2019 — Jan 2024',
+        },
+      ],
+      skills: [
+        {
+          label: 'Languages',
+          items:
+            'JavaScript, TypeScript, Python, Rust, PHP, Golang, SQL, ColdFusion',
+        },
+        {
+          label: 'Technologies',
+          items:
+            'React, Next.js, Astro, Node.js, NestJS, Flask, Gin, PostgreSQL, MySQL, MongoDB',
+        },
+        { label: 'Cloud', items: 'AWS, Firebase, Heroku' },
+        { label: 'Tools', items: 'Git, GitHub, GitLab, Docker' },
+      ],
+      additional: [
+        { label: 'Languages', items: 'Spanish (native), English (B1)' },
+        {
+          label: 'Certifications',
+          items:
+            'Full Stack Developer (Codecademy), Design Database (Codecademy)',
+        },
+        {
+          label: 'Awards',
+          items: 'Academic Excellence (2020 — 2025)',
+        },
+      ],
+    },
   },
 
   // ── Español (/es/) ───────────────────────────────────────────
@@ -342,6 +501,128 @@ export const content: Record<Lang, Content> = {
         tags: ['NestJS', 'Next.js', 'Firebase', 'MongoDB', 'WebSockets'],
       },
     ],
+    cv: {
+      title: 'Ingeniero de Software',
+      download: 'Descargar PDF',
+      back: 'volver al sitio',
+      summary:
+        'Ingeniero de software full-stack con experiencia construyendo y escalando aplicaciones web con Go, TypeScript y frameworks modernos como Next.js. Especializado en diseñar APIs eficientes, optimizar el rendimiento de sistemas y entregar soluciones confiables listas para producción.',
+      sections: {
+        summary: 'Resumen',
+        experience: 'Experiencia Profesional',
+        education: 'Educación',
+        skills: 'Habilidades Técnicas',
+        additional: 'Información Adicional',
+      },
+      experience: [
+        {
+          role: 'Software Developer',
+          company: 'San Services',
+          location: 'San Pedro Sula, Honduras',
+          period: 'Jun 2025 — Presente',
+          bullets: [
+            'Migré aplicaciones legacy de Lucee/ColdFusion a Go, mejorando rendimiento, escalabilidad y mantenibilidad.',
+            'Desarrollé aplicaciones full-stack con Next.js y Strapi para agilizar la gestión de contenido y la entrega de funcionalidades.',
+            'Construí y optimicé APIs RESTful en Go, mejorando la eficiencia del backend y la capacidad de respuesta del sistema.',
+            'Contribuí a modernizar sistemas legacy hacia arquitecturas escalables y modulares.',
+          ],
+        },
+        {
+          role: 'Founder & Developer',
+          company: 'Vallen',
+          location: 'Remoto',
+          period: '2024 — Presente',
+          bullets: [
+            'Diseñé, construí y opero un SaaS de catálogos digitales con integración de WhatsApp, a cargo de todo el stack: del frontend a la infraestructura.',
+            'Implementé gestión de pedidos en tiempo real, dashboard de analíticas y un generador de temas con IA.',
+            'Gestiono el ciclo de vida completo del producto: pagos, despliegues, monitoreo y feedback de clientes.',
+          ],
+        },
+        {
+          role: 'Founder',
+          company: 'Fallxn Studio',
+          location: 'Remoto',
+          period: 'Ago 2023 — Presente',
+          bullets: [
+            'Entrego sitios web y software a medida para negocios en Latinoamérica, EE. UU. y Europa — más de 15 proyectos lanzados.',
+            'Lidero proyectos end-to-end: requerimientos, diseño, desarrollo, despliegue y mantenimiento.',
+            'Enfoque en usabilidad y rendimiento, con tiempos de carga promedio menores a 1.2 segundos.',
+          ],
+        },
+        {
+          role: 'Software Engineer',
+          company: 'Lumen Energy Solutions',
+          location: 'Honduras',
+          period: 'May 2024 — Jun 2025',
+          bullets: [
+            'Desarrollé aplicaciones full-stack para sistemas de monitoreo energético usando Angular, React y Go.',
+            'Procesé y analicé datos de telemetría para dar soporte a insights en tiempo real y optimización de sistemas.',
+            'Construí servicios backend y APIs para ingesta, almacenamiento y visualización de datos.',
+            'Mejoré la confiabilidad y el rendimiento del sistema optimizando consultas de base de datos y lógica de backend.',
+            'Contribuí a herramientas internas y dashboards para monitorear métricas eléctricas y energéticas.',
+          ],
+        },
+        {
+          role: 'Software Developer',
+          company: 'Naranja y Media',
+          location: 'Remoto',
+          period: 'Sep 2023 — Ene 2025',
+          bullets: [
+            'Desarrollé aplicaciones web full-stack con React, Next.js, NestJS y MongoDB.',
+            'Diseñé e implementé estructuras de base de datos escalables para aplicaciones dinámicas.',
+            'Construí e integré APIs para dar soporte al frontend y a servicios de terceros.',
+            'Usé Docker para contenerizar aplicaciones, mejorando la consistencia y escalabilidad de los despliegues.',
+            'Colaboré en la entrega de soluciones a medida según los requerimientos de cada cliente.',
+          ],
+        },
+        {
+          role: 'Soporte Técnico',
+          company: 'VJ Innovations',
+          location: 'San Pedro Sula, Honduras',
+          period: 'Sep 2016 — Ene 2020',
+          bullets: [
+            'Configuré y mantuve infraestructura de red con sistemas MikroTik, Cisco y Ubuntu.',
+            'Instalé y di soporte a redes de fibra óptica y soluciones de conectividad inalámbrica.',
+            'Diagnostiqué y resolví problemas de conectividad y hardware para usuarios finales.',
+            'Brindé soporte técnico asegurando un rendimiento de red estable en todos los despliegues.',
+          ],
+        },
+      ],
+      education: [
+        {
+          degree: 'Ingeniería en Sistemas',
+          school: 'Universidad Nacional Autónoma de Honduras',
+          location: 'Honduras',
+          period: 'Ene 2019 — Ene 2024',
+        },
+      ],
+      skills: [
+        {
+          label: 'Lenguajes',
+          items:
+            'JavaScript, TypeScript, Python, Rust, PHP, Golang, SQL, ColdFusion',
+        },
+        {
+          label: 'Tecnologías',
+          items:
+            'React, Next.js, Astro, Node.js, NestJS, Flask, Gin, PostgreSQL, MySQL, MongoDB',
+        },
+        { label: 'Cloud', items: 'AWS, Firebase, Heroku' },
+        { label: 'Herramientas', items: 'Git, GitHub, GitLab, Docker' },
+      ],
+      additional: [
+        { label: 'Idiomas', items: 'Español (nativo), Inglés (B1)' },
+        {
+          label: 'Certificaciones',
+          items:
+            'Full Stack Developer (Codecademy), Design Database (Codecademy)',
+        },
+        {
+          label: 'Reconocimientos',
+          items: 'Excelencia Académica (2020 — 2025)',
+        },
+      ],
+    },
   },
 };
 

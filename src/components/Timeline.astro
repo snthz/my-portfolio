@@ -5,46 +5,151 @@ import { content, getLang } from '../data/profile';
 const t = content[getLang(Astro.currentLocale)];
 ---
 
-<section id="experience" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
-  <SectionHeading number="03" title={t.sections.experience} />
+<section
+  id="experience"
+  class="mx-auto grid max-w-4xl scroll-mt-24 gap-6 border-t border-line px-6 py-20 sm:grid-cols-[11rem_1fr] sm:gap-10"
+>
+  <SectionHeading title={t.sections.experience} />
 
-  <div class="relative mt-12 pl-8 sm:pl-10" data-timeline>
-    <!-- Línea vertical: se dibuja con GSAP al hacer scroll -->
-    <span
-      class="absolute top-1 bottom-1 left-[5px] w-px bg-line sm:left-[7px]"
-      aria-hidden="true"></span>
-    <span
-      class="absolute top-1 bottom-1 left-[5px] w-px bg-accent sm:left-[7px]"
-      aria-hidden="true"
-      data-timeline-line></span>
-
-    <ol class="space-y-14">
+  <div class="grid gap-8 md:grid-cols-[11rem_1fr]" data-xp data-animate>
+    <!-- Empresas: fila desplazable en móvil, columna en desktop -->
+    <div
+      role="tablist"
+      aria-orientation="vertical"
+      class="relative -mx-6 flex overflow-x-auto border-b border-line px-6 scrollbar-none md:mx-0 md:flex-col md:overflow-visible md:border-b-0 md:border-l md:px-0"
+    >
       {
-        t.experience.map((job) => (
-          <li class="relative" data-animate data-timeline-item>
-            <span
-              class="absolute top-1.5 -left-8 size-[11px] rounded-full border-2 border-accent bg-base sm:-left-10 sm:size-[15px]"
-              aria-hidden="true"
-            />
-            <p class="font-mono text-xs text-accent">{job.period}</p>
-            <h3 class="mt-2 text-lg font-semibold text-bright">
+        t.experience.map((job, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`xp-tab-${i}`}
+            aria-controls={`xp-panel-${i}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            class="shrink-0 px-4 py-3 text-left text-sm whitespace-nowrap text-muted transition-colors hover:bg-surface hover:text-ink aria-selected:text-ink md:px-5"
+            data-xp-tab
+          >
+            {job.company}
+          </button>
+        ))
+      }
+      <span
+        class="absolute bottom-0 left-0 bg-accent md:top-0 md:bottom-auto md:-left-px"
+        aria-hidden="true"
+        data-xp-indicator></span>
+    </div>
+
+    <div class="grid">
+      {
+        t.experience.map((job, i) => (
+          <article
+            role="tabpanel"
+            id={`xp-panel-${i}`}
+            aria-labelledby={`xp-tab-${i}`}
+            class="col-start-1 row-start-1"
+            hidden={i !== 0}
+            data-xp-panel
+          >
+            <h3 class="font-serif text-2xl font-medium text-ink" data-xp-line>
               {job.role}
-              <span class="text-muted"> · {job.company}</span>
+              <span class="text-accent italic"> @ {job.company}</span>
             </h3>
-            <p class="mt-1 text-xs text-muted">{job.location}</p>
-            <p class="mt-3 max-w-2xl text-sm leading-relaxed text-soft">
+            <p class="mt-1 text-sm text-muted tabular-nums" data-xp-line>
+              {job.period} · {job.location}
+            </p>
+            <p class="mt-5 max-w-xl leading-relaxed text-soft" data-xp-line>
               {job.description}
             </p>
-            <ul class="mt-4 flex flex-wrap gap-2">
+            <ul class="mt-5 flex flex-wrap gap-2" data-xp-line>
               {job.tags.map((tag) => (
-                <li class="rounded-full border border-line px-3 py-1 font-mono text-xs text-muted">
+                <li class="rounded-full border border-line px-3 py-1 text-xs text-soft">
                   {tag}
                 </li>
               ))}
             </ul>
-          </li>
+          </article>
         ))
       }
-    </ol>
+    </div>
   </div>
 </section>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const root = document.querySelector<HTMLElement>('[data-xp]')!;
+  const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-xp-tab]')];
+  const panels = [...root.querySelectorAll<HTMLElement>('[data-xp-panel]')];
+  const indicator = root.querySelector<HTMLElement>('[data-xp-indicator]')!;
+  const vertical = matchMedia('(min-width: 48rem)');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let active = 0;
+
+  function moveIndicator(animate = true) {
+    const tab = tabs[active];
+    const props = vertical.matches
+      ? { x: 0, y: tab.offsetTop, width: 2, height: tab.offsetHeight }
+      : { x: tab.offsetLeft, y: 0, width: tab.offsetWidth, height: 1 };
+    gsap.to(indicator, {
+      ...props,
+      duration: animate && !reduced ? 0.45 : 0,
+      ease: 'power3.out',
+    });
+  }
+
+  function select(index: number) {
+    if (index === active) return;
+    const previous = panels[active];
+    active = index;
+
+    tabs.forEach((tab, i) => {
+      tab.setAttribute('aria-selected', String(i === index));
+      tab.tabIndex = i === index ? 0 : -1;
+    });
+    tabs[index].scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+    moveIndicator();
+
+    // Ambos paneles comparten celda: el anterior sale mientras el nuevo entra
+    const next = panels[index];
+    gsap.killTweensOf(panels);
+    for (const panel of panels) if (panel !== previous && panel !== next) panel.hidden = true;
+    next.hidden = false;
+
+    if (reduced) {
+      previous.hidden = true;
+      return;
+    }
+    gsap.to(previous, {
+      opacity: 0,
+      y: -8,
+      duration: 0.2,
+      ease: 'power2.in',
+      onComplete: () => {
+        previous.hidden = true;
+        gsap.set(previous, { clearProps: 'opacity,transform' });
+      },
+    });
+    gsap.fromTo(
+      next.querySelectorAll('[data-xp-line]'),
+      { opacity: 0, y: 14 },
+      { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.07, delay: 0.12, overwrite: true }
+    );
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(i));
+    tab.addEventListener('keydown', (e) => {
+      const keys: Record<string, number> = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
+      if (!(e.key in keys)) return;
+      e.preventDefault();
+      const next = (i + keys[e.key] + tabs.length) % tabs.length;
+      tabs[next].focus();
+      select(next);
+    });
+  });
+
+  moveIndicator(false);
+  vertical.addEventListener('change', () => moveIndicator(false));
+  addEventListener('resize', () => moveIndicator(false));
+</script>

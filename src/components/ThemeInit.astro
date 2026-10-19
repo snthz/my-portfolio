@@ -1,0 +1,14 @@
+<!-- Aplica el tema antes del primer pintado para evitar el parpadeo -->
+<script is:inline>
+  (() => {
+    let theme = null;
+    try {
+      theme = localStorage.getItem('theme');
+    } catch {}
+    const dark =
+      theme === 'dark' ||
+      (theme !== 'light' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('dark', dark);
+  })();
+</script>

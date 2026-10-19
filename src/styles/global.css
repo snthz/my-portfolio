@@ -1,16 +1,30 @@
 @import 'tailwindcss';
 
-@theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+@custom-variant dark (&:where(.dark, .dark *));
 
-  --color-base: #09090b;
-  --color-surface: #101013;
-  --color-line: #1f1f23;
-  --color-muted: #71717a;
-  --color-soft: #a1a1aa;
-  --color-bright: #f4f4f5;
-  --color-accent: #ffffff;
+@theme {
+  --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Newsreader Variable', Georgia, 'Times New Roman', serif;
+
+  --color-paper: #f6f2eb;
+  --color-surface: #ede7dd;
+  --color-line: #dcd4c7;
+  --color-muted: #81776b;
+  --color-soft: #4b443c;
+  --color-ink: #1d1a16;
+  --color-accent: #b4441f;
+}
+
+/* Tema oscuro: mismos tokens, tonos cálidos invertidos */
+html.dark {
+  color-scheme: dark;
+  --color-paper: #15120f;
+  --color-surface: #1e1a16;
+  --color-line: #342e27;
+  --color-muted: #948a7e;
+  --color-soft: #c8bfb2;
+  --color-ink: #f3ede4;
+  --color-accent: #e2733f;
 }
 
 html {
@@ -18,26 +32,33 @@ html {
 }
 
 body {
-  background-color: var(--color-base);
+  background-color: var(--color-paper);
   color: var(--color-soft);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 200ms,
+    color 200ms;
 }
 
 ::selection {
-  background-color: var(--color-bright);
-  color: var(--color-base);
+  background-color: var(--color-accent);
+  color: var(--color-paper);
 }
 
-/* Sutil textura de ruido sobre el fondo */
-.noise::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+/* Enlace de texto con subrayado fino que toma el color de acento al pasar */
+.link {
+  text-decoration: underline;
+  text-decoration-color: var(--color-line);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition:
+    color 150ms,
+    text-decoration-color 150ms;
+}
+.link:hover {
+  color: var(--color-accent);
+  text-decoration-color: currentColor;
 }
 
 /* Estado inicial de los elementos animados con GSAP.
@@ -45,10 +66,6 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   html.js [data-animate] {
     opacity: 0;
-    transform: translateY(24px);
-  }
-  html.js [data-timeline-line] {
-    transform: scaleY(0);
-    transform-origin: top;
+    transform: translateY(10px);
   }
 }

@@ -1,5 +1,6 @@
 ---
 import { content, getLang } from '../data/profile';
+import ThemeToggle from './ThemeToggle.astro';
 
 const lang = getLang(Astro.currentLocale);
 const t = content[lang].nav;
@@ -20,15 +21,15 @@ const languages = [
 ---
 
 <header
-  class="fixed top-0 z-40 w-full border-b border-line/60 bg-base/70 backdrop-blur-md"
+  class="fixed top-0 z-40 w-full border-b border-line bg-paper/95"
 >
   <nav class="mx-auto max-w-4xl px-6" data-nav>
     <div class="flex items-center justify-between py-4">
       <a
         href={`${home}#top`}
-        class="font-mono text-sm font-semibold tracking-tight text-bright transition-colors hover:text-soft"
+        class="font-serif text-lg font-medium text-ink transition-colors hover:text-accent"
       >
-        axl.santos
+        Axl Santos
       </a>
 
       <div class="flex items-center gap-6">
@@ -38,7 +39,7 @@ const languages = [
               <li>
                 <a
                   href={link.href}
-                  class="text-sm text-muted transition-colors hover:text-bright"
+                  class="text-sm text-soft transition-colors hover:text-accent"
                 >
                   {link.label}
                 </a>
@@ -47,7 +48,7 @@ const languages = [
           }
         </ul>
 
-        <div class="flex items-center gap-2 font-mono text-xs">
+        <div class="flex items-center gap-1.5 text-sm">
           {
             languages.map((l, i) => (
               <>
@@ -55,8 +56,8 @@ const languages = [
                 <a
                   href={l.href}
                   class:list={[
-                    'uppercase transition-colors hover:text-bright',
-                    l.code === lang ? 'text-bright' : 'text-muted',
+                    'uppercase transition-colors hover:text-accent',
+                    l.code === lang ? 'font-medium text-ink' : 'text-muted',
                   ]}
                 >
                   {l.code}
@@ -65,6 +66,8 @@ const languages = [
             ))
           }
         </div>
+
+        <ThemeToggle />
 
         <button
           type="button"
@@ -75,23 +78,23 @@ const languages = [
           data-menu-toggle
         >
           <span
-            class="h-px w-5 bg-bright transition-transform duration-300"
+            class="h-px w-5 bg-ink transition-transform duration-300"
             data-menu-bar-top></span>
           <span
-            class="h-px w-5 bg-bright transition-transform duration-300"
+            class="h-px w-5 bg-ink transition-transform duration-300"
             data-menu-bar-bottom></span>
         </button>
       </div>
     </div>
 
     <div id="mobile-menu" class="hidden pb-6 sm:hidden" data-menu-panel>
-      <ul class="flex flex-col gap-4 border-t border-line/60 pt-5">
+      <ul class="flex flex-col gap-4 border-t border-line pt-5">
         {
           links.map((link) => (
             <li>
               <a
                 href={link.href}
-                class="block text-sm text-soft transition-colors hover:text-bright"
+                class="block text-soft transition-colors hover:text-accent"
                 data-menu-link
               >
                 {link.label}

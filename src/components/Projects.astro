@@ -1,65 +1,211 @@
 ---
 import SectionHeading from './SectionHeading.astro';
-import { content, getLang } from '../data/profile';
+import { content, getLang, type Project } from '../data/profile';
 
 const t = content[getLang(Astro.currentLocale)];
-const featured = t.projects.filter((p) => p.featured);
-const others = t.projects.filter((p) => !p.featured);
+
+const tabs: { id: string; label: string; items: Project[] }[] = [
+  { id: 'work', label: t.projectTabs.work, items: t.projects },
+  { id: 'tools', label: t.projectTabs.tools, items: t.tools },
+];
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
-<section id="projects" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
-  <SectionHeading number="02" title={t.sections.projects} />
+<section
+  id="projects"
+  class="mx-auto grid max-w-4xl scroll-mt-24 gap-6 border-t border-line px-6 py-20 sm:grid-cols-[11rem_1fr] sm:gap-10"
+>
+  <SectionHeading title={t.sections.projects} />
 
-  <div class="mt-10 grid gap-4 sm:grid-cols-2">
+  <div data-projects>
+    <div
+      role="tablist"
+      class="relative flex gap-6 border-b border-line text-sm"
+      data-animate
+    >
+      {
+        tabs.map((tab, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tab-${tab.id}`}
+            aria-controls={`panel-${tab.id}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            class="pb-3 text-muted transition-colors hover:text-ink aria-selected:text-ink"
+            data-tab
+          >
+            {tab.label}
+            <sup class="ml-0.5 text-[0.65rem] tabular-nums">{pad(tab.items.length)}</sup>
+          </button>
+        ))
+      }
+      <span
+        class="absolute -bottom-px left-0 h-px w-0 bg-accent"
+        aria-hidden="true"
+        data-tab-indicator></span>
+    </div>
+
     {
-      featured.map((project) => (
-        <a
-          href={project.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="group flex flex-col rounded-xl border border-line bg-surface p-7 transition-colors hover:border-accent/40"
-          data-animate
+      tabs.map((tab, i) => (
+        <div
+          role="tabpanel"
+          id={`panel-${tab.id}`}
+          aria-labelledby={`tab-${tab.id}`}
+          hidden={i !== 0}
+          data-panel
         >
-          <div class="flex items-start justify-between">
-            <h3 class="text-xl font-semibold text-bright transition-colors group-hover:text-accent">
-              {project.name}
-            </h3>
-            <span class="text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent">
-              ↗
-            </span>
-          </div>
-          <p class="mt-3 flex-1 text-sm leading-relaxed text-soft">
-            {project.description}
-          </p>
-          <ul class="mt-5 flex flex-wrap gap-2">
-            {project.tags.map((tag) => (
-              <li class="font-mono text-xs text-muted">{tag}</li>
+          {tab.id === 'tools' && (
+            <p class="mt-5 text-sm text-muted">{t.toolsBlurb}</p>
+          )}
+          <ul class:list={[tab.id === 'tools' && 'mt-3 border-t border-line']} data-project-list>
+            {tab.items.map((project, n) => (
+              <li class="border-b border-line" data-animate data-row>
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group grid grid-cols-[2rem_1fr_auto] items-center gap-x-4 py-5"
+                >
+                  <span class="self-start pt-2 text-xs text-muted tabular-nums">
+                    {pad(n + 1)}
+                  </span>
+
+                  <span class="min-w-0">
+                    <span class="flex flex-wrap items-baseline gap-x-3">
+                      <span class="font-serif text-2xl font-medium text-ink transition-[color,translate] duration-300 group-hover:translate-x-1.5 group-hover:text-accent sm:text-3xl">
+                        {project.name}
+                      </span>
+                      {project.featured && (
+                        <span class="text-[0.65rem] tracking-widest text-accent uppercase">
+                          {t.featured}
+                        </span>
+                      )}
+                    </span>
+                    <span class="mt-1 line-clamp-2 text-sm leading-relaxed text-muted pointer-fine:sr-only">
+                      {project.description}
+                    </span>
+                  </span>
+
+                  <span class="flex items-center gap-4">
+                    <span class="hidden text-sm text-muted pointer-fine:inline">
+                      {project.tags.slice(0, 2).join(' · ')}
+                    </span>
+                    {project.image && (
+                      <img
+                        src={project.image}
+                        alt=""
+                        width="1440"
+                        height="900"
+                        loading="lazy"
+                        decoding="async"
+                        class="aspect-16/10 w-24 rounded border border-line object-cover object-top pointer-fine:hidden"
+                      />
+                    )}
+                    <span
+                      class="hidden text-muted transition-[color,rotate] duration-300 group-hover:rotate-45 group-hover:text-accent pointer-fine:inline"
+                      aria-hidden="true"
+                    >
+                      ↗
+                    </span>
+                  </span>
+
+                  {/* Panel que se despliega dentro de la fila al pasar el mouse */}
+                  <span
+                    class="col-span-2 col-start-2 hidden grid-rows-[0fr] transition-[grid-template-rows] duration-500 ease-out group-hover:grid-rows-[1fr] group-focus-visible:grid-rows-[1fr] pointer-fine:grid motion-reduce:transition-none"
+                    aria-hidden="true"
+                  >
+                    <span class="min-h-0 overflow-hidden">
+                      <span class="flex items-start gap-6 pt-5 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100">
+                        {project.image && (
+                          <img
+                            src={project.image}
+                            alt=""
+                            width="1440"
+                            height="900"
+                            loading="lazy"
+                            decoding="async"
+                            class="aspect-16/10 w-64 shrink-0 scale-95 rounded-md border border-line object-cover object-top transition-transform duration-500 ease-out group-hover:scale-100 group-focus-visible:scale-100 motion-reduce:transition-none"
+                          />
+                        )}
+                        <span class="max-w-sm text-sm leading-relaxed text-muted">
+                          {project.description}
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </a>
+              </li>
             ))}
           </ul>
-        </a>
+        </div>
       ))
     }
   </div>
-
-  <ul class="mt-4 grid gap-4 sm:grid-cols-3">
-    {
-      others.map((project) => (
-        <li data-animate>
-          <a
-            href={project.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="group flex h-full flex-col rounded-xl border border-line p-5 transition-colors hover:border-accent/40 hover:bg-surface"
-          >
-            <h3 class="text-sm font-semibold text-bright transition-colors group-hover:text-accent">
-              {project.name} <span class="text-muted">↗</span>
-            </h3>
-            <p class="mt-2 flex-1 text-xs leading-relaxed text-muted">
-              {project.description}
-            </p>
-          </a>
-        </li>
-      ))
-    }
-  </ul>
 </section>
+
+<style>
+  /* Al pasar sobre la lista, atenúa las filas que no están bajo el cursor */
+  @media (pointer: fine) {
+    [data-project-list]:hover [data-row]:not(:hover) {
+      opacity: 0.35 !important;
+    }
+    [data-row] {
+      transition: opacity 250ms;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const root = document.querySelector<HTMLElement>('[data-projects]')!;
+  const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+  const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+  const indicator = root.querySelector<HTMLElement>('[data-tab-indicator]')!;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── Pestañas ────────────────────────────────────────────────
+  function moveIndicator(tab: HTMLElement, animate = true) {
+    gsap.to(indicator, {
+      x: tab.offsetLeft,
+      width: tab.offsetWidth,
+      duration: animate && !reduced ? 0.45 : 0,
+      ease: 'power3.out',
+    });
+  }
+
+  function select(index: number) {
+    tabs.forEach((tab, i) => {
+      const active = i === index;
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      panels[i].hidden = !active;
+    });
+    moveIndicator(tabs[index]);
+
+    const rows = panels[index].querySelectorAll('[data-row]');
+    gsap.fromTo(
+      rows,
+      { opacity: 0, y: reduced ? 0 : 14 },
+      { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.06, overwrite: true }
+    );
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(i));
+    tab.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      const next = (i + step + tabs.length) % tabs.length;
+      tabs[next].focus();
+      select(next);
+    });
+  });
+
+  moveIndicator(tabs[0], false);
+  addEventListener('resize', () => {
+    const active = tabs.find((t) => t.getAttribute('aria-selected') === 'true');
+    if (active) moveIndicator(active, false);
+  });
+</script>

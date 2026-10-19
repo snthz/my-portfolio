@@ -6,13 +6,17 @@ const t = content[getLang(Astro.currentLocale)];
 const g = t.game;
 ---
 
-<section id="game" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
-  <SectionHeading number="04" title={g.title} />
-  <div class="mt-4 flex flex-wrap items-center justify-between gap-3" data-animate>
-    <p class="text-sm text-muted" data-game-instructions>{g.instructions}</p>
+<section
+  id="game"
+  class="mx-auto grid max-w-4xl scroll-mt-24 gap-6 border-t border-line px-6 py-20 sm:grid-cols-[11rem_1fr] sm:gap-10"
+>
+  <SectionHeading title={g.title} />
+  <div>
+  <div class="flex flex-wrap items-center justify-between gap-3" data-animate>
+    <p class="text-soft" data-game-instructions>{g.instructions}</p>
     <button
       type="button"
-      class="font-mono text-xs text-muted underline decoration-line underline-offset-4 transition-colors hover:text-bright"
+      class="link text-sm text-muted"
       data-game-toggle
       data-label-disable={g.disable}
       data-label-enable={g.enable}
@@ -23,59 +27,104 @@ const g = t.game;
 
   <div data-game-body>
     <div
-      class="relative mt-6 overflow-hidden rounded-xl border border-line bg-surface/60"
+      class="relative mt-6 overflow-hidden rounded-lg border border-line bg-surface"
       data-animate
     >
       <canvas
-        class="block h-[380px] w-full cursor-crosshair touch-none select-none"
-        data-game-canvas></canvas>
+        class="block h-90 w-full cursor-pointer touch-none outline-none select-none focus-visible:ring-1 focus-visible:ring-accent sm:h-105"
+        tabindex="0"
+        aria-label={g.instructions}
+        data-game-canvas
+        data-start={g.start}
+        data-start-hint={g.startHint}
+        data-game-over={g.gameOver}
+        data-play-again={g.playAgain}
+        data-score={g.score}
+        data-best={g.best}></canvas>
       <p
-        class="pointer-events-none absolute top-4 right-5 font-mono text-xs text-muted"
+        class="pointer-events-none absolute top-4 right-5 text-sm text-muted tabular-nums"
         data-game-progress
       >
       </p>
       <button
         type="button"
-        class="absolute bottom-3 right-5 hidden font-mono text-xs text-muted transition-colors hover:text-bright"
+        class="link absolute right-5 bottom-3 hidden text-sm text-muted"
         data-game-replay
       >
-        ⟳ {g.replay}
+        {g.replay}
       </button>
     </div>
 
-    <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+    <ul class="mt-6 grid gap-x-6 sm:grid-cols-2">
       {
         g.facts.map((fact, i) => (
           <li
-            class="rounded-xl border border-line px-4 py-3 font-mono text-xs transition-colors duration-500"
+            class="border-b border-line py-3 text-sm"
             data-fact
             data-index={i}
           >
-            <span class="text-muted/50 select-none" data-fact-locked>
-              ▒▒▒▒▒▒▒▒▒▒▒▒
+            <span class="text-muted select-none" data-fact-locked>
+              ———
             </span>
             <span class="hidden text-soft" data-fact-text>
-              {fact}
+              {typeof fact === 'string' ? fact : fact.text}
+              {typeof fact !== 'string' && (
+                <img
+                  src={fact.flag}
+                  alt=""
+                  width="28"
+                  height="14"
+                  class="ml-1.5 inline-block h-3.5 w-auto align-[-2px] ring-1 ring-line"
+                />
+              )}
             </span>
           </li>
         ))
       }
     </ul>
 
-    <p class="mt-6 hidden font-mono text-sm text-bright" data-game-complete>
+    <p class="mt-6 hidden font-serif text-lg text-ink italic" data-game-complete>
       {g.complete}
     </p>
+  </div>
   </div>
 </section>
 
 <script>
   const STORAGE_REVEALED = 'minigame-revealed';
   const STORAGE_DISABLED = 'minigame-disabled';
+  const STORAGE_BEST = 'minigame-best';
 
   const canvas = document.querySelector(
     '[data-game-canvas]'
   ) as HTMLCanvasElement;
   const ctx = canvas.getContext('2d')!;
+  const label = canvas.dataset as {
+    start: string;
+    startHint: string;
+    gameOver: string;
+    playAgain: string;
+    score: string;
+    best: string;
+  };
+
+  // Colores del canvas tomados de los tokens CSS (cambian con el tema)
+  let colors = { ink: '', paper: '', accent: '', muted: '' };
+  function readColors() {
+    const css = getComputedStyle(document.documentElement);
+    colors = {
+      ink: css.getPropertyValue('--color-ink').trim(),
+      paper: css.getPropertyValue('--color-paper').trim(),
+      accent: css.getPropertyValue('--color-accent').trim(),
+      muted: css.getPropertyValue('--color-muted').trim(),
+    };
+  }
+  readColors();
+  document.addEventListener('themechange', () => {
+    readColors();
+    if (!running) render(0);
+  });
+
   const body = document.querySelector('[data-game-body]') as HTMLElement;
   const toggleBtn = document.querySelector(
     '[data-game-toggle]'
@@ -95,42 +144,132 @@ const g = t.game;
   let revealed = new Set<number>(
     JSON.parse(localStorage.getItem(STORAGE_REVEALED) ?? '[]') as number[]
   );
+  let best = Number(localStorage.getItem(STORAGE_BEST) ?? 0);
 
-  interface Orb {
-    index: number;
+  // ── Entidades ────────────────────────────────────────────────
+  // Velocidades en px por frame a 60 fps; los tiempos en ms.
+  interface Rock {
     x: number;
     y: number;
+    vx: number;
+    vy: number;
     r: number;
-    vx: number;
-    vy: number;
-    phase: number;
+    rot: number;
+    vr: number;
+    shape: number[];
+    hp: number;
+    fact: number | null;
+    flash: number;
+    dead?: boolean;
   }
 
-  interface Shot {
+  interface Enemy {
+    x: number;
+    y: number;
+    baseX: number;
+    hoverY: number;
+    amp: number;
+    age: number;
+    leaveAt: number;
+    fireIn: number;
+    hp: number;
+    flash: number;
+    dead?: boolean;
+  }
+
+  interface Bullet {
     x: number;
     y: number;
     vx: number;
     vy: number;
+    hostile: boolean;
+    dead?: boolean;
+  }
+
+  interface Particle {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    age: number;
     life: number;
+    accent: boolean;
   }
 
-  interface Burst {
+  interface Ring {
     x: number;
     y: number;
-    startedAt: number;
+    size: number;
+    age: number;
   }
 
-  const BURST_MS = 500;
-  let orbs: Orb[] = [];
-  let shots: Shot[] = [];
-  let bursts: Burst[] = [];
+  interface Popup {
+    x: number;
+    y: number;
+    text: string;
+    age: number;
+  }
+
+  interface Star {
+    x: number;
+    y: number;
+    z: number;
+  }
+
+  type Phase = 'ready' | 'playing' | 'over';
+  type TextLine = [text: string, font: string, primary: boolean];
+
+  const LIVES = 3;
+  const SHIP_R = 9;
+  const FIRE_MS = 170;
+  const RAPID_FIRE_MS = 110;
+  const RAPID_MS = 6000;
+  const INVULN_MS = 1800;
+  const RING_MS = 500;
+  const POPUP_MS = 800;
+  const SERIF = '"Newsreader Variable", Georgia, serif';
+  const SANS = '"Hanken Grotesk Variable", system-ui, sans-serif';
+
+  let phase: Phase = 'ready';
+  let rocks: Rock[] = [];
+  let enemies: Enemy[] = [];
+  let bullets: Bullet[] = [];
+  let particles: Particle[] = [];
+  let rings: Ring[] = [];
+  let popups: Popup[] = [];
+  let stars: Star[] = [];
+
   let width = 0;
   let height = 0;
   let shipX = 0;
-  let aimX = 0;
-  let aimY = 0;
+  let shipY = 0;
+  let targetX = 0;
+  let targetY = 0;
+  let pointerFiring = false;
+  let keyFiring = false;
+  const keys = new Set<string>();
+
+  let lives = LIVES;
+  let score = 0;
+  let elapsed = 0;
+  let fireIn = 0;
+  let invuln = 0;
+  let rapid = 0;
+  let shake = 0;
+  let rockIn = 0;
+  let enemyIn = 0;
+  let factIn = 0;
+
+  let restartAt = 0;
   let running = false;
   let rafId = 0;
+  let last = 0;
+
+  const rand = (a: number, b: number) => a + Math.random() * (b - a);
+  const clamp = (v: number, a: number, b: number) =>
+    Math.max(a, Math.min(b, v));
+  // Sube de 0 a 1 durante el primer minuto y medio de partida
+  const difficulty = () => Math.min(1, elapsed / 90000);
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -139,27 +278,87 @@ const g = t.game;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    shipX = width / 2;
-    aimX = width / 2;
-    aimY = 0;
-  }
 
-  function spawnOrbs() {
-    orbs = [];
-    for (let i = 0; i < total; i++) {
-      if (revealed.has(i)) continue;
-      orbs.push({
-        index: i,
-        x: 40 + Math.random() * (width - 80),
-        y: 40 + Math.random() * (height * 0.5),
-        r: 16,
-        vx: (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.4),
-        vy: (Math.random() < 0.5 ? -1 : 1) * (0.2 + Math.random() * 0.3),
-        phase: Math.random() * Math.PI * 2,
-      });
+    stars = Array.from({ length: Math.floor((width * height) / 3500) }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      z: rand(0.2, 1),
+    }));
+
+    if (phase === 'playing') {
+      shipX = targetX = clamp(shipX, 14, width - 14);
+      shipY = targetY = clamp(shipY, height * 0.45, height - 22);
+    } else {
+      shipX = targetX = width / 2;
+      shipY = targetY = height - 34;
     }
   }
 
+  // ── Fábricas ─────────────────────────────────────────────────
+  function makeRock(x: number, y: number, r: number, fact: number | null): Rock {
+    const sides = 9 + Math.floor(Math.random() * 4);
+    return {
+      x,
+      y,
+      r,
+      fact,
+      vx: rand(-0.5, 0.5),
+      vy: fact !== null ? 0.55 : rand(0.8, 1.6) + difficulty() * 1.2,
+      rot: Math.random() * Math.PI * 2,
+      vr: rand(-0.02, 0.02),
+      shape: Array.from({ length: sides }, () => rand(0.72, 1.12)),
+      hp: fact !== null ? 3 : r > 20 ? 2 : 1,
+      flash: 0,
+    };
+  }
+
+  function spawnRock() {
+    const r = Math.random() < 0.45 ? rand(24, 30) : rand(11, 16);
+    rocks.push(makeRock(rand(r, width - r), -r, r, null));
+  }
+
+  function spawnFactRock() {
+    const next = chips.map((_, i) => i).find((i) => !revealed.has(i));
+    if (next === undefined) return;
+    rocks.push(makeRock(rand(40, width - 40), -26, 22, next));
+  }
+
+  function spawnEnemy() {
+    const amp = Math.min(rand(30, 80), width / 4);
+    const baseX = rand(amp + 20, width - amp - 20);
+    enemies.push({
+      x: baseX,
+      y: -20,
+      baseX,
+      hoverY: rand(50, height * 0.35),
+      amp,
+      age: 0,
+      leaveAt: rand(7000, 10000),
+      fireIn: rand(900, 1600),
+      hp: 2,
+      flash: 0,
+    });
+  }
+
+  function explode(x: number, y: number, size: number, accent: boolean) {
+    const count = Math.round(8 + size * 0.6);
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = rand(0.6, 2.6) * (size / 20 + 0.5);
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        age: 0,
+        life: rand(350, 750),
+        accent: accent || Math.random() < 0.3,
+      });
+    }
+    rings.push({ x, y, size, age: 0 });
+  }
+
+  // ── Datos desbloqueados ──────────────────────────────────────
   function syncChips() {
     for (const chip of chips) {
       const i = Number(chip.dataset.index);
@@ -172,7 +371,6 @@ const g = t.game;
         'hidden',
         !unlocked
       );
-      chip.classList.toggle('bg-surface', unlocked);
     }
     progressEl.textContent = `${revealed.size}/${total}`;
     const done = revealed.size === total;
@@ -186,153 +384,612 @@ const g = t.game;
     syncChips();
   }
 
-  // ── Render ───────────────────────────────────────────────────
-  function draw(time: number) {
-    ctx.clearRect(0, 0, width, height);
+  // ── Partida ──────────────────────────────────────────────────
+  // Evita reiniciar sin querer justo después de perder
+  const canStart = () => phase !== 'over' || performance.now() >= restartAt;
 
-    // Orbes con "?" y parpadeo suave
-    for (const o of orbs) {
-      const pulse = 0.75 + 0.25 * Math.sin(time / 900 + o.phase);
-      ctx.beginPath();
-      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(161, 161, 170, ${0.8 * pulse})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = `rgba(244, 244, 245, ${0.06 * pulse})`;
-      ctx.fill();
-      ctx.fillStyle = `rgba(244, 244, 245, ${0.9 * pulse})`;
-      ctx.font = '12px "JetBrains Mono Variable", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('?', o.x, o.y + 0.5);
+  function startGame() {
+    phase = 'playing';
+    rocks = [];
+    enemies = [];
+    bullets = [];
+    popups = [];
+    lives = LIVES;
+    score = 0;
+    elapsed = 0;
+    fireIn = 0;
+    invuln = 1000;
+    rapid = 0;
+    rockIn = 600;
+    enemyIn = 6000;
+    factIn = 2500;
+    canvas.style.cursor = 'none';
+  }
 
-      o.x += o.vx;
-      o.y += o.vy;
-      if (o.x < o.r || o.x > width - o.r) o.vx *= -1;
-      if (o.y < o.r || o.y > height * 0.65) o.vy *= -1;
+  function gameOver() {
+    phase = 'over';
+    restartAt = performance.now() + 800;
+    pointerFiring = keyFiring = false;
+    canvas.style.cursor = '';
+    explode(shipX, shipY, 30, true);
+    if (score > best) {
+      best = score;
+      localStorage.setItem(STORAGE_BEST, String(best));
+    }
+  }
+
+  function hurt() {
+    lives--;
+    invuln = INVULN_MS;
+    shake = 10;
+    explode(shipX, shipY, 14, true);
+    if (lives <= 0) gameOver();
+  }
+
+  function hitRock(rock: Rock, scored = true) {
+    rock.hp--;
+    rock.flash = 90;
+    if (rock.hp > 0) return;
+
+    rock.dead = true;
+    explode(rock.x, rock.y, rock.r, rock.fact !== null);
+
+    // Un meteorito "?" revela un dato y da disparo doble unos segundos
+    if (rock.fact !== null) {
+      reveal(rock.fact);
+      rapid = RAPID_MS;
+      factIn = 3500;
+      score += 100;
+      popups.push({ x: rock.x, y: rock.y, text: '+100 · ×2', age: 0 });
+      return;
     }
 
-    // Disparos
-    for (const s of shots) {
-      ctx.beginPath();
-      ctx.moveTo(s.x, s.y);
-      ctx.lineTo(s.x - s.vx * 1.6, s.y - s.vy * 1.6);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      s.x += s.vx;
-      s.y += s.vy;
-      s.life--;
+    if (scored) score += rock.r > 20 ? 20 : 10;
+    // Los meteoritos grandes se parten en dos pequeños
+    if (rock.r > 20) {
+      for (const dir of [-1, 1]) {
+        const shard = makeRock(rock.x, rock.y, rand(11, 14), null);
+        shard.vx = dir * rand(0.8, 1.4);
+        shard.vy = rock.vy * 0.8;
+        rocks.push(shard);
+      }
     }
-    shots = shots.filter(
-      (s) => s.life > 0 && s.x > -10 && s.x < width + 10 && s.y > -10
-    );
+  }
 
-    // Colisiones
-    for (const s of shots) {
-      for (const o of orbs) {
-        if (Math.hypot(s.x - o.x, s.y - o.y) < o.r + 2) {
-          bursts.push({ x: o.x, y: o.y, startedAt: time });
-          reveal(o.index);
-          orbs = orbs.filter((other) => other !== o);
-          s.life = 0;
+  function hitEnemy(enemy: Enemy) {
+    enemy.hp--;
+    enemy.flash = 90;
+    if (enemy.hp > 0) return;
+    enemy.dead = true;
+    explode(enemy.x, enemy.y, 20, true);
+    score += 50;
+    popups.push({ x: enemy.x, y: enemy.y, text: '+50', age: 0 });
+  }
+
+  // ── Update ───────────────────────────────────────────────────
+  function update(dt: number) {
+    const k = dt / (1000 / 60);
+    const playing = phase === 'playing';
+
+    for (const s of stars) {
+      s.y += (0.3 + s.z * 1.2) * k * (playing ? 1.6 : 1);
+      if (s.y > height) {
+        s.y = 0;
+        s.x = Math.random() * width;
+      }
+    }
+
+    // Nave
+    const step = 5.5 * k;
+    if (keys.has('ArrowLeft') || keys.has('KeyA')) targetX -= step;
+    if (keys.has('ArrowRight') || keys.has('KeyD')) targetX += step;
+    if (keys.has('ArrowUp') || keys.has('KeyW')) targetY -= step;
+    if (keys.has('ArrowDown') || keys.has('KeyS')) targetY += step;
+    targetX = clamp(targetX, 14, width - 14);
+    targetY = clamp(targetY, height * 0.45, height - 22);
+    const ease = Math.min(1, 0.22 * k);
+    shipX += (targetX - shipX) * ease;
+    shipY += (targetY - shipY) * ease;
+
+    if (playing) {
+      elapsed += dt;
+      invuln = Math.max(0, invuln - dt);
+      rapid = Math.max(0, rapid - dt);
+
+      // Disparo
+      fireIn -= dt;
+      if ((pointerFiring || keyFiring) && fireIn <= 0) {
+        for (const dx of rapid > 0 ? [-6, 6] : [0]) {
+          bullets.push({ x: shipX + dx, y: shipY - 10, vx: 0, vy: -10, hostile: false });
+        }
+        fireIn = rapid > 0 ? RAPID_FIRE_MS : FIRE_MS;
+      }
+
+      // Aparición de meteoritos y naves enemigas
+      const d = difficulty();
+      rockIn -= dt;
+      if (rockIn <= 0) {
+        spawnRock();
+        rockIn = rand(0.7, 1.3) * (1300 - 700 * d);
+      }
+      enemyIn -= dt;
+      if (enemyIn <= 0) {
+        if (enemies.length < 1 + Math.floor(d * 3)) spawnEnemy();
+        enemyIn = rand(0.8, 1.2) * (5000 - 2800 * d);
+      }
+      if (!rocks.some((r) => r.fact !== null)) {
+        factIn -= dt;
+        if (factIn <= 0) {
+          spawnFactRock();
+          factIn = 5000;
+        }
+      }
+    }
+
+    for (const b of bullets) {
+      b.x += b.vx * k;
+      b.y += b.vy * k;
+      if (b.y < -10 || b.y > height + 10 || b.x < -10 || b.x > width + 10)
+        b.dead = true;
+    }
+
+    for (const r of rocks) {
+      r.x += r.vx * k;
+      r.y += r.vy * k;
+      r.rot += r.vr * k;
+      r.flash = Math.max(0, r.flash - dt);
+      if (r.x < r.r || r.x > width - r.r) r.vx = -r.vx;
+      if (r.y - r.r > height) r.dead = true;
+    }
+
+    for (const e of enemies) {
+      e.age += dt;
+      e.flash = Math.max(0, e.flash - dt);
+      if (e.age >= e.leaveAt) e.y += 2.2 * k;
+      else if (e.y < e.hoverY) e.y += 1.4 * k;
+      e.x = e.baseX + Math.sin(e.age / 900) * e.amp;
+      if (e.y > height + 20) e.dead = true;
+
+      // Disparan apuntando a la nave
+      if (playing && e.age < e.leaveAt && e.y > 0) {
+        e.fireIn -= dt;
+        if (e.fireIn <= 0) {
+          const d = difficulty();
+          const angle = Math.atan2(shipY - e.y, shipX - e.x);
+          const speed = 2.6 + d * 1.4;
+          bullets.push({
+            x: e.x,
+            y: e.y + 8,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            hostile: true,
+          });
+          e.fireIn = rand(1100, 1900) - 600 * d;
+        }
+      }
+    }
+
+    // Disparos del jugador contra meteoritos y enemigos
+    for (const b of bullets) {
+      if (b.dead || b.hostile) continue;
+      for (const r of rocks) {
+        if (!r.dead && Math.hypot(b.x - r.x, b.y - r.y) < r.r) {
+          b.dead = true;
+          hitRock(r);
+          break;
+        }
+      }
+      if (b.dead) continue;
+      for (const e of enemies) {
+        if (!e.dead && Math.hypot(b.x - e.x, b.y - e.y) < 14) {
+          b.dead = true;
+          hitEnemy(e);
           break;
         }
       }
     }
 
-    // Anillos de explosión
-    bursts = bursts.filter((b) => time - b.startedAt < BURST_MS);
-    for (const b of bursts) {
-      const p = (time - b.startedAt) / BURST_MS;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, 6 + p * 30, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(244, 244, 245, ${0.6 * (1 - p)})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, 2 + p * 14, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(244, 244, 245, ${0.3 * (1 - p)})`;
-      ctx.stroke();
+    // Impactos contra la nave
+    if (playing && invuln <= 0) {
+      const bulletHit = bullets.find(
+        (b) =>
+          b.hostile && !b.dead && Math.hypot(b.x - shipX, b.y - shipY) < SHIP_R + 2
+      );
+      const rockHit = rocks.find(
+        (r) =>
+          !r.dead &&
+          r.fact === null &&
+          Math.hypot(r.x - shipX, r.y - shipY) < r.r * 0.85 + SHIP_R * 0.6
+      );
+      const enemyHit = enemies.find(
+        (e) => !e.dead && Math.hypot(e.x - shipX, e.y - shipY) < 16
+      );
+      if (bulletHit) bulletHit.dead = true;
+      if (rockHit) {
+        rockHit.hp = 1;
+        hitRock(rockHit, false);
+      }
+      if (enemyHit) {
+        enemyHit.dead = true;
+        explode(enemyHit.x, enemyHit.y, 20, true);
+      }
+      if (bulletHit || rockHit || enemyHit) hurt();
     }
 
-    // Nave: triángulo orientado hacia el cursor
-    const shipY = height - 26;
-    shipX += (aimX - shipX) * 0.12;
-    const angle = Math.atan2(aimY - shipY, aimX - shipX);
+    for (const p of particles) {
+      p.age += dt;
+      p.x += p.vx * k;
+      p.y += p.vy * k;
+      p.vx *= 0.98;
+      p.vy *= 0.98;
+    }
+    for (const ring of rings) ring.age += dt;
+    for (const p of popups) {
+      p.age += dt;
+      p.y -= 0.4 * k;
+    }
+    shake = Math.max(0, shake - 0.6 * k);
+
+    bullets = bullets.filter((b) => !b.dead);
+    rocks = rocks.filter((r) => !r.dead);
+    enemies = enemies.filter((e) => !e.dead);
+    particles = particles.filter((p) => p.age < p.life);
+    rings = rings.filter((ring) => ring.age < RING_MS);
+    popups = popups.filter((p) => p.age < POPUP_MS);
+  }
+
+  // ── Render ───────────────────────────────────────────────────
+  function drawShip(x: number, y: number, scale = 1, flame = false) {
     ctx.save();
-    ctx.translate(shipX, shipY);
-    ctx.rotate(angle + Math.PI / 2);
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    if (flame) {
+      ctx.beginPath();
+      ctx.moveTo(-3, 8);
+      ctx.lineTo(0, 12 + Math.random() * 6);
+      ctx.lineTo(3, 8);
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
     ctx.beginPath();
     ctx.moveTo(0, -12);
     ctx.lineTo(8, 10);
     ctx.lineTo(0, 5);
     ctx.lineTo(-8, 10);
     ctx.closePath();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.lineWidth = 1.2;
+    ctx.fillStyle = colors.paper;
+    ctx.fill();
+    ctx.strokeStyle = colors.ink;
+    ctx.lineWidth = 1.4;
     ctx.stroke();
     ctx.restore();
   }
 
-  function loop(time: number) {
-    draw(time);
+  function drawRock(r: Rock, time: number) {
+    const isFact = r.fact !== null;
+    ctx.save();
+    ctx.translate(r.x, r.y);
+
+    if (isFact) {
+      ctx.beginPath();
+      ctx.arc(0, 0, r.r + 6 + Math.sin(time / 250) * 2, 0, Math.PI * 2);
+      ctx.setLineDash([3, 4]);
+      ctx.globalAlpha = 0.45;
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.rotate(r.rot);
+    ctx.beginPath();
+    r.shape.forEach((m, i) => {
+      const a = (i / r.shape.length) * Math.PI * 2;
+      const px = Math.cos(a) * r.r * m;
+      const py = Math.sin(a) * r.r * m;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+    ctx.fillStyle = colors.paper;
+    ctx.fill();
+    if (r.flash > 0) {
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = colors.accent;
+      ctx.fill();
+    }
+    ctx.globalAlpha = isFact ? 1 : 0.8;
+    ctx.strokeStyle = isFact ? colors.accent : colors.ink;
+    ctx.lineWidth = isFact ? 1.5 : 1.1;
+    ctx.stroke();
+    ctx.restore();
+
+    if (isFact) {
+      ctx.fillStyle = colors.accent;
+      ctx.font = `italic 18px ${SERIF}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('?', r.x, r.y + 1);
+    }
+  }
+
+  function drawEnemy(e: Enemy) {
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.beginPath();
+    ctx.moveTo(0, 10);
+    ctx.lineTo(13, -4);
+    ctx.lineTo(6, -9);
+    ctx.lineTo(0, -3);
+    ctx.lineTo(-6, -9);
+    ctx.lineTo(-13, -4);
+    ctx.closePath();
+    ctx.fillStyle = colors.paper;
+    ctx.fill();
+    if (e.flash > 0) {
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = colors.accent;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = colors.ink;
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 2, 2, 0, Math.PI * 2);
+    ctx.fillStyle = colors.accent;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCenteredText(lines: TextLine[]) {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    let y = height / 2 - ((lines.length - 1) * 30) / 2;
+    for (const [text, font, primary] of lines) {
+      ctx.font = font;
+      ctx.fillStyle = primary ? colors.ink : colors.muted;
+      ctx.fillText(text, width / 2, y);
+      y += 30;
+    }
+  }
+
+  function render(time: number) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+    if (shake > 0) {
+      ctx.translate(rand(-shake, shake) * 0.5, rand(-shake, shake) * 0.5);
+    }
+
+    // Estrellas
+    ctx.fillStyle = colors.muted;
+    for (const s of stars) {
+      ctx.globalAlpha = 0.25 + s.z * 0.45;
+      ctx.fillRect(s.x, s.y, s.z * 1.6, s.z * 1.6);
+    }
+    ctx.globalAlpha = 1;
+
+    for (const r of rocks) drawRock(r, time);
+    for (const e of enemies) drawEnemy(e);
+
+    // Disparos: los del jugador son líneas, los enemigos son puntos
+    for (const b of bullets) {
+      if (b.hostile) {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 2.6, 0, Math.PI * 2);
+        ctx.fillStyle = colors.ink;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = colors.ink;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y);
+        ctx.lineTo(b.x, b.y + 8);
+        ctx.strokeStyle = colors.accent;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    // Nave (parpadea mientras es invulnerable)
+    if (phase !== 'over' && !reducedMotion) {
+      const blink = invuln > 0 && Math.floor(invuln / 100) % 2 === 0;
+      ctx.globalAlpha = blink ? 0.3 : 1;
+      drawShip(shipX, shipY, 1, phase === 'playing');
+      ctx.globalAlpha = 1;
+    }
+
+    // Explosiones
+    for (const p of particles) {
+      ctx.globalAlpha = 1 - p.age / p.life;
+      ctx.fillStyle = p.accent ? colors.accent : colors.ink;
+      ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
+    }
+    for (const ring of rings) {
+      const p = ring.age / RING_MS;
+      ctx.beginPath();
+      ctx.arc(ring.x, ring.y, ring.size * (0.3 + p * 1.2), 0, Math.PI * 2);
+      ctx.globalAlpha = 0.6 * (1 - p);
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `600 12px ${SANS}`;
+    ctx.fillStyle = colors.accent;
+    for (const p of popups) {
+      ctx.globalAlpha = 1 - p.age / POPUP_MS;
+      ctx.fillText(p.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    if (reducedMotion) return;
+
+    // HUD: puntos, récord y vidas
+    if (phase !== 'ready') {
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = `13px ${SANS}`;
+      ctx.fillStyle = colors.muted;
+      ctx.fillText(
+        `${label.score} ${score} · ${label.best} ${Math.max(best, score)}`,
+        20,
+        26
+      );
+      for (let i = 0; i < lives; i++) drawShip(26 + i * 16, 44, 0.55);
+      if (rapid > 0) {
+        ctx.fillStyle = colors.accent;
+        ctx.fillText('×2', 22 + Math.max(lives, 1) * 16, 49);
+      }
+    }
+
+    if (phase === 'ready') {
+      const lines: TextLine[] = [
+        [label.start, `italic 26px ${SERIF}`, true],
+        [label.startHint, `13px ${SANS}`, false],
+      ];
+      if (best > 0) lines.push([`${label.best} ${best}`, `13px ${SANS}`, false]);
+      drawCenteredText(lines);
+    } else if (phase === 'over') {
+      drawCenteredText([
+        [label.gameOver, `italic 28px ${SERIF}`, true],
+        [`${label.score} ${score} · ${label.best} ${best}`, `14px ${SANS}`, false],
+        [label.playAgain, `13px ${SANS}`, false],
+      ]);
+    }
+  }
+
+  function loop(now: number) {
+    const dt = last ? Math.min(now - last, 50) : 1000 / 60;
+    last = now;
+    update(dt);
+    render(now);
     if (running) rafId = requestAnimationFrame(loop);
   }
 
   function start() {
     if (running) return;
     running = true;
+    last = 0;
     rafId = requestAnimationFrame(loop);
   }
 
   function stop() {
     running = false;
+    pointerFiring = keyFiring = false;
+    keys.clear();
     cancelAnimationFrame(rafId);
   }
 
+  // Sin animaciones: meteoritos quietos con "?" que se revelan al hacer clic
+  function layoutStatic() {
+    const pending = chips.map((_, i) => i).filter((i) => !revealed.has(i));
+    rocks = pending.map((fact, i) => {
+      const rock = makeRock(
+        (width * (i + 1)) / (pending.length + 1),
+        height / 2 + (i % 2 ? 40 : -40),
+        22,
+        fact
+      );
+      rock.vx = rock.vy = rock.vr = 0;
+      return rock;
+    });
+    render(0);
+  }
+
   // ── Input ────────────────────────────────────────────────────
-  canvas.addEventListener('pointermove', (e) => {
+  function aimAt(e: PointerEvent) {
     const rect = canvas.getBoundingClientRect();
-    aimX = e.clientX - rect.left;
-    aimY = e.clientY - rect.top;
-  });
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    targetX = x;
+    // En táctil la nave queda por encima del dedo para que se vea
+    targetY = e.pointerType === 'touch' ? y - 44 : y;
+    return { x, y };
+  }
+
+  canvas.addEventListener('pointermove', aimAt);
 
   canvas.addEventListener('pointerdown', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    aimX = e.clientX - rect.left;
-    aimY = e.clientY - rect.top;
+    canvas.focus({ preventScroll: true });
+    const { x, y } = aimAt(e);
 
-    // Sin animaciones, el clic directo sobre un orbe lo revela
     if (reducedMotion) {
-      const hit = orbs.find((o) => Math.hypot(aimX - o.x, aimY - o.y) < o.r + 6);
-      if (hit) {
-        reveal(hit.index);
-        orbs = orbs.filter((o) => o !== hit);
-        draw(0);
+      const hit = rocks.find((r) => Math.hypot(x - r.x, y - r.y) < r.r + 6);
+      if (hit && hit.fact !== null) {
+        reveal(hit.fact);
+        rocks = rocks.filter((r) => r !== hit);
+        render(0);
       }
       return;
     }
 
-    const shipY = height - 26;
-    const angle = Math.atan2(aimY - shipY, aimX - shipX);
-    const speed = 9;
-    shots.push({
-      x: shipX,
-      y: shipY - 8,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 120,
-    });
+    if (phase !== 'playing') {
+      if (!canStart()) return;
+      startGame();
+    }
+    pointerFiring = true;
+    canvas.setPointerCapture(e.pointerId);
+  });
+
+  const releasePointer = () => (pointerFiring = false);
+  canvas.addEventListener('pointerup', releasePointer);
+  canvas.addEventListener('pointercancel', releasePointer);
+
+  const FIRE_KEYS = ['Space', 'Enter'];
+  const MOVE_KEYS = [
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowUp',
+    'ArrowDown',
+    'KeyA',
+    'KeyD',
+    'KeyW',
+    'KeyS',
+  ];
+
+  canvas.addEventListener('keydown', (e) => {
+    if (reducedMotion) return;
+    if (FIRE_KEYS.includes(e.code)) {
+      e.preventDefault();
+      if (phase !== 'playing') {
+        if (!canStart()) return;
+        startGame();
+      }
+      keyFiring = true;
+    } else if (MOVE_KEYS.includes(e.code)) {
+      e.preventDefault();
+      keys.add(e.code);
+    }
+  });
+
+  canvas.addEventListener('keyup', (e) => {
+    if (FIRE_KEYS.includes(e.code)) keyFiring = false;
+    keys.delete(e.code);
+  });
+
+  canvas.addEventListener('blur', () => {
+    keyFiring = false;
+    keys.clear();
   });
 
   replayBtn.addEventListener('click', () => {
     revealed = new Set();
     localStorage.removeItem(STORAGE_REVEALED);
     syncChips();
-    spawnOrbs();
+    if (reducedMotion) layoutStatic();
+    else factIn = 1500;
   });
-
 
   function setDisabled(disabled: boolean) {
     body.classList.toggle('hidden', disabled);
@@ -345,9 +1002,8 @@ const g = t.game;
     } else {
       localStorage.removeItem(STORAGE_DISABLED);
       resize();
-      spawnOrbs();
-      if (!reducedMotion) start();
-      else draw(0);
+      if (reducedMotion) layoutStatic();
+      else start();
     }
   }
 
@@ -358,15 +1014,13 @@ const g = t.game;
   // ── Init ─────────────────────────────────────────────────────
   const initiallyDisabled = localStorage.getItem(STORAGE_DISABLED) === '1';
   resize();
-  spawnOrbs();
   syncChips();
 
   if (initiallyDisabled) {
     setDisabled(true);
   } else if (reducedMotion) {
-    draw(0);
+    layoutStatic();
   } else {
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (body.classList.contains('hidden')) return;
@@ -384,8 +1038,7 @@ const g = t.game;
     resizeTimer = setTimeout(() => {
       if (body.classList.contains('hidden')) return;
       resize();
-      spawnOrbs();
-      if (reducedMotion) draw(0);
+      if (reducedMotion) layoutStatic();
     }, 150);
   });
 </script>

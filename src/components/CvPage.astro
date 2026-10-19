@@ -1,5 +1,8 @@
 ---
+import '@fontsource-variable/hanken-grotesk/index.css';
 import '../styles/global.css';
+import ThemeInit from './ThemeInit.astro';
+import ThemeToggle from './ThemeToggle.astro';
 import { profile, content, getLang } from '../data/profile';
 
 const lang = getLang(Astro.currentLocale);
@@ -23,40 +26,42 @@ const contact = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
     <title>{`${profile.name} — CV`}</title>
+    <ThemeInit />
   </head>
   <body>
     <!-- Barra de acciones (no se imprime) -->
     <header
-      class="fixed top-0 z-40 w-full border-b border-line/60 bg-base/70 backdrop-blur-md print:hidden"
+      class="fixed top-0 z-40 w-full border-b border-line bg-paper/95 print:hidden"
     >
       <nav class="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
         <a
           href={home}
-          class="font-mono text-sm text-muted transition-colors hover:text-bright"
+          class="text-sm text-soft transition-colors hover:text-accent"
         >
           ←<span class="hidden sm:inline"> {cv.back}</span>
         </a>
         <div class="flex items-center gap-4 sm:gap-5">
-          <div class="flex items-center gap-2 font-mono text-xs">
+          <div class="flex items-center gap-1.5 text-sm">
             <a
               href="/cv"
               class:list={[
-                'uppercase transition-colors hover:text-bright',
-                lang === 'en' ? 'text-bright' : 'text-muted',
+                'uppercase transition-colors hover:text-accent',
+                lang === 'en' ? 'font-medium text-ink' : 'text-muted',
               ]}>en</a
             >
             <span class="text-line">/</span>
             <a
               href="/es/cv"
               class:list={[
-                'uppercase transition-colors hover:text-bright',
-                lang === 'es' ? 'text-bright' : 'text-muted',
+                'uppercase transition-colors hover:text-accent',
+                lang === 'es' ? 'font-medium text-ink' : 'text-muted',
               ]}>es</a
             >
           </div>
+          <ThemeToggle />
           <button
             type="button"
-            class="rounded-full bg-bright px-5 py-2 text-sm font-medium text-base transition-opacity hover:opacity-85"
+            class="rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper transition-colors hover:bg-accent"
             data-print
           >
             {cv.download} ↓
@@ -67,7 +72,7 @@ const contact = [
 
     <!-- Hoja del CV (estructura estilo Harvard) -->
     <main
-      class="cv-sheet mx-auto my-20 w-[calc(100%-2rem)] max-w-207.5 bg-white px-5 py-8 text-zinc-900 shadow-2xl sm:my-24 sm:px-14 sm:py-12 print:m-0 print:w-full print:max-w-none print:p-0 print:shadow-none"
+      class="cv-sheet mx-auto my-20 w-[calc(100%-2rem)] max-w-207.5 bg-white px-5 py-8 text-zinc-900 shadow-sm ring-1 ring-line sm:my-24 sm:px-14 sm:py-12 print:m-0 print:w-full print:max-w-none print:p-0 print:shadow-none"
     >
       <!-- Encabezado -->
       <header class="text-center">

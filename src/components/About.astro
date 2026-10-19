@@ -2,30 +2,37 @@
 import SectionHeading from './SectionHeading.astro';
 import { content, stack, getLang } from '../data/profile';
 
-const t = content[getLang(Astro.currentLocale)];
+const lang = getLang(Astro.currentLocale);
+const t = content[lang];
 ---
 
-<section id="about" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
-  <SectionHeading number="01" title={t.sections.about} />
-  <div class="mt-8 max-w-2xl space-y-4">
-    {
-      t.about.map((paragraph) => (
-        <p class="leading-relaxed text-soft" data-animate>
-          {paragraph}
-        </p>
-      ))
-    }
+<section
+  id="about"
+  class="mx-auto grid max-w-4xl scroll-mt-24 gap-6 border-t border-line px-6 py-20 sm:grid-cols-[11rem_1fr] sm:gap-10"
+>
+  <SectionHeading title={t.sections.about} />
+  <div class="max-w-2xl">
+    <div class="space-y-4">
+      {
+        t.about.map((paragraph) => (
+          <p class="text-lg leading-relaxed text-soft" data-animate>
+            {paragraph}
+          </p>
+        ))
+      }
+    </div>
+    <p class="mt-8 text-sm font-medium text-ink" data-animate>
+      {lang === 'es' ? 'Herramientas que uso' : 'Tools I work with'}
+    </p>
+    <ul class="mt-3 flex flex-wrap gap-2" data-animate>
+      {
+        stack.map((tool) => (
+          <li class="rounded-full border border-line px-3 py-1 text-sm text-soft transition-colors hover:border-accent hover:text-ink">
+            {tool}
+          </li>
+        ))
+      }
+    </ul>
   </div>
-  <ul class="mt-10 flex max-w-2xl flex-wrap gap-2">
-    {
-      stack.map((tech) => (
-        <li
-          class="rounded-full border border-line bg-surface px-3.5 py-1.5 font-mono text-xs text-soft transition-colors hover:border-accent/40 hover:text-accent"
-          data-animate
-        >
-          {tech}
-        </li>
-      ))
-    }
-  </ul>
 </section>
+

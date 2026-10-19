@@ -5,15 +5,18 @@ import { profile, content, getLang } from '../data/profile';
 const t = content[getLang(Astro.currentLocale)];
 ---
 
-<section id="contact" class="mx-auto max-w-4xl scroll-mt-24 px-6 py-24">
-  <SectionHeading number="05" title={t.sections.contact} />
-  <div class="mt-8 max-w-xl">
-    <p class="leading-relaxed text-soft" data-animate>
+<section
+  id="contact"
+  class="mx-auto grid max-w-4xl scroll-mt-24 gap-6 border-t border-line px-6 py-20 sm:grid-cols-[11rem_1fr] sm:gap-10"
+>
+  <SectionHeading title={t.sections.contact} />
+  <div class="max-w-xl">
+    <p class="text-lg leading-relaxed text-soft" data-animate>
       {t.contactBlurb}
     </p>
     <a
       href={`mailto:${profile.email}`}
-      class="mt-8 inline-block rounded-full border border-line bg-surface px-6 py-3 font-mono text-sm text-bright transition-colors hover:border-accent/50 hover:text-accent"
+      class="link mt-6 inline-block font-serif text-2xl break-all text-ink sm:text-3xl"
       data-animate
     >
       {profile.email}
@@ -21,21 +24,19 @@ const t = content[getLang(Astro.currentLocale)];
   </div>
 </section>
 
-<footer class="border-t border-line/60">
+<footer class="mx-auto max-w-4xl px-6">
   <div
-    class="mx-auto flex max-w-4xl flex-col items-center justify-between gap-3 px-6 py-8 sm:flex-row"
+    class="flex flex-col justify-between gap-3 border-t border-line py-8 text-sm text-muted sm:flex-row"
   >
-    <p class="font-mono text-xs text-muted">
-      © {new Date().getFullYear()} {profile.name}
-    </p>
-    <div class="flex gap-5">
+    <p>© {new Date().getFullYear()} {profile.name}</p>
+    <div class="flex flex-wrap gap-x-5 gap-y-2">
       {
         profile.socials.map((social) => (
           <a
             href={social.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="font-mono text-xs text-muted transition-colors hover:text-accent"
+            class="link"
           >
             {social.label}
           </a>

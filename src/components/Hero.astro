@@ -4,26 +4,19 @@ import { profile, content, getLang } from '../data/profile';
 const lang = getLang(Astro.currentLocale);
 const t = content[lang];
 
-const socials = profile.socials.slice(0, 2);
-const projects = profile.socials.slice(2);
-
 const stats =
   lang === 'es'
     ? [
-        { value: '5+', label: 'años de exp.' },
-        { value: '15+', label: 'proyectos' },
+        { value: '5+', label: 'años de experiencia' },
+        { value: '15+', label: 'proyectos entregados' },
       ]
     : [
-        { value: '5+', label: 'yrs experience' },
+        { value: '5+', label: 'years of experience' },
         { value: '15+', label: 'projects shipped' },
       ];
 ---
 
-<section
-  id="top"
-  class="mx-auto flex min-h-svh max-w-4xl flex-col justify-center px-6 pt-24"
->
-  <!-- Photo + status -->
+<section id="top" class="mx-auto max-w-4xl px-6 pt-36 pb-20 sm:pt-44">
   <div class="flex items-center gap-4" data-animate>
     <img
       src={profile.photo}
@@ -31,109 +24,67 @@ const stats =
       width="640"
       height="640"
       loading="eager"
-      class="size-14 rounded-xl border border-line object-cover sm:size-16"
+      class="size-14 rounded-full object-cover sm:size-16"
     />
-    <div class="flex flex-col gap-1">
-      <span class="flex items-center gap-2 font-mono text-xs text-soft">
-        <span class="size-1.5 animate-pulse rounded-full bg-emerald-500"></span>
-        {lang === 'es' ? 'Disponible para proyectos' : 'Available for projects'}
-      </span>
-      <span class="font-mono text-xs text-muted">San Pedro Sula, Honduras </span>
-    </div>
+    <p class="text-sm leading-snug text-muted">
+      {t.location}
+      <br />
+      {lang === 'es' ? 'Disponible para proyectos' : 'Available for new projects'}
+    </p>
   </div>
 
-  <!-- Greeting + Name + Role -->
-  <p class="mt-10 font-mono text-sm text-soft" data-animate>
-    {t.greeting}
-  </p>
   <h1
-    class="mt-2 text-5xl font-bold tracking-tight text-bright sm:text-7xl"
+    class="mt-10 max-w-3xl font-serif text-5xl leading-[1.05] font-medium tracking-tight text-ink sm:text-7xl"
     data-animate
   >
     {profile.name}
   </h1>
-  <h2
-    class="mt-3 text-xl font-semibold tracking-tight text-muted sm:text-3xl"
-    data-animate
-  >
+  <p class="mt-4 font-serif text-xl text-soft italic sm:text-2xl" data-animate>
     {t.role}
-  </h2>
-  <p class="mt-5 max-w-lg leading-relaxed text-soft" data-animate>
+  </p>
+  <p class="mt-6 max-w-xl text-lg leading-relaxed text-soft" data-animate>
     {t.tagline}
   </p>
 
-  <!-- Stats -->
-  <div
-    class="mt-10 flex gap-8 border-t border-line pt-6"
-    data-animate
-  >
+  <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4" data-animate>
+    <a
+      href={`mailto:${profile.email}`}
+      class="inline-flex rounded-md bg-ink px-5 py-2.5 text-sm font-medium text-paper transition-colors hover:bg-accent"
+    >
+      {t.cta}
+    </a>
+    <a href={lang === 'es' ? '/es/cv' : '/cv'} class="link text-sm font-medium text-ink">
+      {lang === 'es' ? 'Ver CV' : 'View CV'}
+    </a>
+  </div>
+
+  <div class="mt-14 grid max-w-xl grid-cols-2 gap-6 border-t border-line pt-6 sm:grid-cols-4" data-animate>
     {
       stats.map((s) => (
         <div>
-          <p class="text-lg font-bold text-bright">{s.value}</p>
-          <p class="mt-0.5 font-mono text-xs text-muted">{s.label}</p>
+          <p class="font-serif text-3xl text-ink">{s.value}</p>
+          <p class="mt-1 text-sm text-muted">{s.label}</p>
         </div>
       ))
     }
-  </div>
-
-  <!-- CTAs -->
-  <div class="mt-8 flex flex-col gap-4" data-animate>
-    <div class="flex items-center gap-5">
-      <a
-        href={`mailto:${profile.email}`}
-        class="inline-flex rounded-full border border-line bg-surface px-5 py-2.5 text-sm font-medium text-bright transition-colors hover:border-soft/50"
-      >
-        {t.cta}
-      </a>
-      <a
-        href={lang === 'es' ? '/es/cv' : '/cv'}
-        class="font-mono text-sm text-muted transition-colors hover:text-bright"
-      >
-        {lang === 'es' ? 'ver CV →' : 'view CV →'}
-      </a>
-    </div>
-
-    <!-- Socials row -->
-    <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
-      <span class="font-mono text-xs text-muted/50 uppercase tracking-widest w-full sm:w-auto">
-        {lang === 'es' ? 'Redes' : 'Social'}
-      </span>
-      {
-        socials.map((s) => (
-          <a
-            href={s.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="font-mono text-sm text-soft transition-colors hover:text-bright"
-          >
-            {s.label} ↗
-          </a>
-        ))
-      }
-    </div>
-
-    <!-- Projects row -->
-    <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
-      <span class="font-mono text-xs text-muted/50 uppercase tracking-widest w-full sm:w-auto">
-        {lang === 'es' ? 'Proyectos' : 'Projects'}
-      </span>
-      {
-        projects.map((s) => (
-          <a
-            href={s.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="font-mono text-sm text-soft transition-colors hover:text-bright"
-          >
-            {s.label} ↗
-          </a>
-        ))
-      }
+    <div class="col-span-2 text-sm leading-relaxed">
+      <p class="text-muted">{lang === 'es' ? 'En la web' : 'Elsewhere'}</p>
+      <p class="mt-1 text-soft">
+        {
+          profile.socials.map((s, i) => (
+            <>
+              {i > 0 && <span class="text-line"> · </span>}
+              <a href={s.url} target="_blank" rel="noopener noreferrer" class="link">
+                {s.label}
+              </a>
+            </>
+          ))
+        }
+      </p>
     </div>
   </div>
 
-  <p class="mt-16 font-mono text-xs text-muted/70 select-none" data-animate>
-    {'// '}{t.gameHint}
+  <p class="mt-14 text-sm text-muted" data-animate>
+    <a href="#game" class="link">{t.gameHint}</a>
   </p>
 </section>

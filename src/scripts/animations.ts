@@ -12,26 +12,11 @@ mm.add('(prefers-reduced-motion: no-preference)', () => {
       gsap.to(elements, {
         opacity: 1,
         y: 0,
-        duration: 0.8,
+        duration: 0.6,
         ease: 'power3.out',
-        stagger: 0.09,
+        stagger: 0.06,
         overwrite: true,
       });
     },
   });
-
-  const line = document.querySelector('[data-timeline-line]');
-  const timeline = document.querySelector('[data-timeline]');
-  if (line && timeline) {
-    gsap.to(line, {
-      scaleY: 1,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: timeline,
-        start: 'top 70%',
-        end: 'bottom 70%',
-        scrub: 0.5,
-      },
-    });
-  }
 });

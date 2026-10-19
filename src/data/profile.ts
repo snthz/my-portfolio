@@ -13,7 +13,7 @@ export const profile = {
   website: 'axlsantos.dev',
   github: 'github.com/snthz',
   linkedin: 'linkedin.com/in/axl-santos',
-  photo: '/me.png',
+  photo: '/me.jpeg',
   socials: [
     { label: 'GitHub', url: 'https://github.com/snthz' },
     { label: 'LinkedIn', url: 'https://www.linkedin.com/in/axl-santos/' },
@@ -44,6 +44,8 @@ export interface Project {
   url: string;
   tags: string[];
   featured?: boolean;
+  /** Screenshot en /public (ej. '/projects/vallen.jpg'). */
+  image?: string;
 }
 
 export interface Experience {
@@ -99,6 +101,9 @@ export interface Content {
     experience: string;
     contact: string;
   };
+  toolsBlurb: string;
+  projectTabs: { work: string; tools: string };
+  featured: string;
   cta: string;
   contactBlurb: string;
   gameHint: string;
@@ -109,9 +114,16 @@ export interface Content {
     replay: string;
     disable: string;
     enable: string;
-    facts: string[];
+    start: string;
+    startHint: string;
+    gameOver: string;
+    playAgain: string;
+    score: string;
+    best: string;
+    facts: (string | { text: string; flag: string })[];
   };
   projects: Project[];
+  tools: Project[];
   experience: Experience[];
   cv: Cv;
 }
@@ -140,25 +152,34 @@ export const content: Record<Lang, Content> = {
       experience: 'Experience',
       contact: 'Contact',
     },
+    toolsBlurb: 'Small apps I built for myself and use every day.',
+    projectTabs: { work: 'Work', tools: 'Personal tools' },
+    featured: 'featured',
     cta: 'Get in touch',
     contactBlurb:
       'Have a project in mind or want to work together? My inbox is always open.',
     gameHint: 'pssst — scroll down, there is a minigame',
     game: {
-      title: 'Target practice',
+      title: 'Space defense',
       instructions:
-        'Move to aim, click to shoot. Every orb you hit unlocks a fact about me.',
-      complete: 'You unlocked my whole profile — nice aim.',
+        'Move with the mouse or arrow keys, click or hold Space to shoot. Blast the ? meteors to unlock facts about me — and dodge the enemy fire.',
+      complete: 'You unlocked my whole profile — keep going for a high score.',
       replay: 'replay',
       disable: 'hide minigame',
       enable: 'show minigame',
+      start: 'Click to start',
+      startHint: 'mouse or arrows to move · click or Space to shoot',
+      gameOver: 'Game over',
+      playAgain: 'click to play again',
+      score: 'score',
+      best: 'best',
       facts: [
         '5+ years shipping software',
         'Founder of Fallxn Studio — 15+ projects delivered',
         'Creator of Vallen, a WhatsApp-commerce SaaS',
         'Clients across LatAm, the US & Europe',
         'Full-stack: from pixel to PostgreSQL',
-        'Based in San Pedro Sula, Honduras 🇭🇳',
+        { text: 'Based in San Pedro Sula, Honduras', flag: '/flags/honduras.svg' },
       ],
     },
     projects: [
@@ -169,6 +190,7 @@ export const content: Record<Lang, Content> = {
         url: 'https://vallen.app/',
         tags: ['SaaS', 'Next.js', 'WhatsApp API', 'Analytics'],
         featured: true,
+        image: '/projects/vallen.jpg',
       },
       {
         name: 'Fallxn Studio',
@@ -177,27 +199,49 @@ export const content: Record<Lang, Content> = {
         url: 'https://fallxn.studio/en',
         tags: ['Studio', 'Web', 'Custom software'],
         featured: true,
-      },
-      {
-        name: 'Go Aligner',
-        description:
-          'Go Aligner is a dental aligner company. We built a high-converting landing page for their marketing campaign, focused on performance and user experience.',
-        url: 'https://fallxn.studio/en',
-        tags: ['Web', 'Landing', 'Conversion'],
+        image: '/projects/fallxn-studio.jpg',
       },
       {
         name: 'Assah Photography',
         description:
-          'Professional portfolio for a photography studio, focused on performance and imagery.',
-        url: 'https://fallxn.studio/en',
+          'Professional portfolio for a maternity and family photographer, focused on performance and imagery.',
+        url: 'https://assahphotos.com/',
         tags: ['Web', 'Portfolio'],
+        image: '/projects/assah-photos.jpg',
       },
       {
-        name: 'Eagles Academy',
+        name: 'ASSAH',
         description:
-          'Institutional website for a bilingual school: academics, admissions, and contact.',
-        url: 'https://fallxn.studio/en',
-        tags: ['Web', 'Institutional'],
+          'Online store for a Honduran print studio: printed and custom apparel, collections, and nationwide shipping.',
+        url: 'https://assah.co/',
+        tags: ['E-commerce', 'Web'],
+        image: '/projects/assah.jpg',
+      },
+    ],
+    tools: [
+      {
+        name: 'Opus Piano',
+        description:
+          'Free course to learn to read music and play the piano, with self-grading exercises, sheet music, and learning paths.',
+        url: 'https://opuspiano.app/',
+        tags: ['Music', 'Learning'],
+        image: '/projects/opus-piano.jpg',
+      },
+      {
+        name: 'Finances',
+        description:
+          'Personal finance app that reads my bank notification emails and turns every purchase into a categorized transaction, with budgets.',
+        url: 'https://finances.fallxn.dev/',
+        tags: ['Finance', 'Automation'],
+        image: '/projects/finances.jpg',
+      },
+      {
+        name: 'Flashcards',
+        description:
+          'Anki-compatible spaced repetition app I use to learn English with my Anki decks, on any device.',
+        url: 'https://flashcards.fallxn.dev/',
+        tags: ['Learning', 'Anki'],
+        image: '/projects/flashcards.jpg',
       },
     ],
     experience: [
@@ -394,25 +438,34 @@ export const content: Record<Lang, Content> = {
       experience: 'Experiencia',
       contact: 'Contacto',
     },
+    toolsBlurb: 'Pequeñas apps que construí para mí y uso a diario.',
+    projectTabs: { work: 'Trabajos', tools: 'Herramientas personales' },
+    featured: 'destacado',
     cta: 'Escríbeme',
     contactBlurb:
       '¿Tienes un proyecto en mente o quieres trabajar conmigo? Mi bandeja de entrada siempre está abierta.',
     gameHint: 'pssst — baja, hay un minijuego',
     game: {
-      title: 'Práctica de tiro',
+      title: 'Defensa espacial',
       instructions:
-        'Mueve para apuntar, haz clic para disparar. Cada orbe que aciertes desbloquea un dato sobre mí.',
-      complete: 'Desbloqueaste todo mi perfil — buena puntería.',
+        'Muévete con el mouse o las flechas, haz clic o mantén Espacio para disparar. Destruye los meteoritos ? para desbloquear datos sobre mí — y esquiva el fuego enemigo.',
+      complete: 'Desbloqueaste todo mi perfil — sigue jugando por el récord.',
       replay: 'reiniciar',
       disable: 'ocultar minijuego',
       enable: 'mostrar minijuego',
+      start: 'Haz clic para empezar',
+      startHint: 'mouse o flechas para moverte · clic o Espacio para disparar',
+      gameOver: 'Fin del juego',
+      playAgain: 'clic para jugar de nuevo',
+      score: 'puntos',
+      best: 'récord',
       facts: [
         '5+ años lanzando software',
         'Fundador de Fallxn Studio — +15 proyectos entregados',
         'Creador de Vallen, un SaaS de comercio por WhatsApp',
         'Clientes en LatAm, EE. UU. y Europa',
         'Full-stack: del píxel a PostgreSQL',
-        'Desde San Pedro Sula, Honduras 🇭🇳',
+        { text: 'Desde San Pedro Sula, Honduras', flag: '/flags/honduras.svg' },
       ],
     },
     projects: [
@@ -423,6 +476,7 @@ export const content: Record<Lang, Content> = {
         url: 'https://vallen.app/',
         tags: ['SaaS', 'Next.js', 'WhatsApp API', 'Analytics'],
         featured: true,
+        image: '/projects/vallen.jpg',
       },
       {
         name: 'Fallxn Studio',
@@ -431,27 +485,49 @@ export const content: Record<Lang, Content> = {
         url: 'https://fallxn.studio/en',
         tags: ['Estudio', 'Web', 'Software a medida'],
         featured: true,
-      },
-      {
-        name: 'Go Aligner',
-        description:
-          'Go Aligner es una compañía de alineadores dentales. Construimos una landing page de alta conversión para su campaña de marketing, enfocada en rendimiento y experiencia de usuario.',
-        url: 'https://fallxn.studio/en',
-        tags: ['Web', 'Landing', 'Conversión'],
+        image: '/projects/fallxn-studio.jpg',
       },
       {
         name: 'Assah Photography',
         description:
-          'Portfolio profesional para estudio de fotografía, enfocado en rendimiento e imagen.',
-        url: 'https://fallxn.studio/en',
+          'Portfolio profesional para una fotógrafa de maternidad y familia, enfocado en rendimiento e imagen.',
+        url: 'https://assahphotos.com/',
         tags: ['Web', 'Portfolio'],
+        image: '/projects/assah-photos.jpg',
       },
       {
-        name: 'Eagles Academy',
+        name: 'ASSAH',
         description:
-          'Sitio institucional para una escuela bilingüe: información académica, admisiones y contacto.',
-        url: 'https://fallxn.studio/en',
-        tags: ['Web', 'Institucional'],
+          'Tienda en línea para un estudio de estampados hondureño: ropa estampada y personalizada, colecciones y envíos a todo el país.',
+        url: 'https://assah.co/',
+        tags: ['E-commerce', 'Web'],
+        image: '/projects/assah.jpg',
+      },
+    ],
+    tools: [
+      {
+        name: 'Opus Piano',
+        description:
+          'Curso gratuito para aprender a leer música y tocar el piano, con ejercicios que se corrigen solos, partituras y rutas de aprendizaje.',
+        url: 'https://opuspiano.app/',
+        tags: ['Música', 'Aprendizaje'],
+        image: '/projects/opus-piano.jpg',
+      },
+      {
+        name: 'Finances',
+        description:
+          'App de finanzas personales que lee los correos de notificación de mi banco y convierte cada compra en una transacción categorizada, con presupuestos.',
+        url: 'https://finances.fallxn.dev/',
+        tags: ['Finanzas', 'Automatización'],
+        image: '/projects/finances.jpg',
+      },
+      {
+        name: 'Flashcards',
+        description:
+          'App de repetición espaciada compatible con Anki que uso para aprender inglés con mis decks, desde cualquier dispositivo.',
+        url: 'https://flashcards.fallxn.dev/',
+        tags: ['Aprendizaje', 'Anki'],
+        image: '/projects/flashcards.jpg',
       },
     ],
     experience: [

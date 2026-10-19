@@ -1,8 +1,9 @@
 ---
-import '@fontsource-variable/inter/index.css';
-import '@fontsource-variable/jetbrains-mono/index.css';
+import '@fontsource-variable/hanken-grotesk/index.css';
+import '@fontsource-variable/newsreader/opsz.css';
+import '@fontsource-variable/newsreader/opsz-italic.css';
 import '../styles/global.css';
-import Background from '../components/Background.astro';
+import ThemeInit from '../components/ThemeInit.astro';
 import { profile, content, getLang } from '../data/profile';
 
 interface Props {
@@ -28,13 +29,15 @@ const {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="alternate" hreflang="en" href={new URL('/', Astro.site)} />
     <link rel="alternate" hreflang="es" href={new URL('/es/', Astro.site)} />
     <title>{title}</title>
+    <ThemeInit />
   </head>
-  <body class="noise">
-    <Background />
+  <body>
     <slot />
   </body>
 </html>

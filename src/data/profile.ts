@@ -270,7 +270,7 @@ export const content: Record<Lang, Content> = {
         location: 'San Pedro Sula, Honduras · On-site',
         description:
           'Full-time software development, working with technologies like Adobe ColdFusion and Next.js.',
-        tags: ['Adobe ColdFusion', 'Next.js'],
+        tags: ['Adobe ColdFusion', 'Next.js', 'Go', 'Oracle', 'MySQL'],
       },
       {
         period: '2024 — Present',

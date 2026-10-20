@@ -1,4 +1,5 @@
 ---
+import { Picture } from 'astro:assets';
 import { profile, content, getLang } from '../data/profile';
 
 const lang = getLang(Astro.currentLocale);
@@ -22,11 +23,12 @@ const [first, ...rest] = profile.name.split(' ');
     <span class="block overflow-hidden pb-[0.04em]" data-reveal aria-hidden="true">
       <span class="flex items-center gap-[0.14em]">
         {first}
-        <img
+        <Picture
           src={profile.photo}
           alt=""
-          width="853"
-          height="1280"
+          formats={['avif', 'webp']}
+          widths={[160, 320, 576]}
+          sizes="(min-width: 1263px) 288px, 23vw"
           loading="eager"
           class="h-[0.7em] w-[1.2em] rounded-full object-cover object-[50%_28%] ring-1 ring-line"
         />

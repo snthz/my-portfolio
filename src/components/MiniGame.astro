@@ -36,6 +36,8 @@ const g = t.game;
         data-start-hint={g.startHint}
         data-game-over={g.gameOver}
         data-play-again={g.playAgain}
+        data-paused={g.paused}
+        data-paused-hint={g.pausedHint}
         data-score={g.score}
         data-best={g.best}></canvas>
       <p
@@ -43,6 +45,15 @@ const g = t.game;
         data-game-progress
       >
       </p>
+      <button
+        type="button"
+        class="link absolute bottom-3 left-5 hidden text-sm text-muted"
+        data-game-pause
+        data-label-pause={g.pause}
+        data-label-resume={g.resume}
+      >
+        {g.pause}
+      </button>
       <button
         type="button"
         class="link absolute right-5 bottom-3 hidden text-sm text-muted"
@@ -101,6 +112,8 @@ const g = t.game;
     startHint: string;
     gameOver: string;
     playAgain: string;
+    paused: string;
+    pausedHint: string;
     score: string;
     best: string;
   };
@@ -128,6 +141,9 @@ const g = t.game;
   ) as HTMLButtonElement;
   const replayBtn = document.querySelector(
     '[data-game-replay]'
+  ) as HTMLButtonElement;
+  const pauseBtn = document.querySelector(
+    '[data-game-pause]'
   ) as HTMLButtonElement;
   const progressEl = document.querySelector('[data-game-progress]')!;
   const completeEl = document.querySelector('[data-game-complete]')!;
@@ -228,6 +244,7 @@ const g = t.game;
   const SANS = '"Hanken Grotesk Variable", system-ui, sans-serif';
 
   let phase: Phase = 'ready';
+  let paused = false;
   let rocks: Rock[] = [];
   let enemies: Enemy[] = [];
   let bullets: Bullet[] = [];
@@ -401,10 +418,25 @@ const g = t.game;
     enemyIn = 6000;
     factIn = 2500;
     canvas.style.cursor = 'none';
+    setPaused(false);
+  }
+
+  function setPaused(value: boolean) {
+    if (value && phase !== 'playing') return;
+    paused = value;
+    pointerFiring = keyFiring = false;
+    keys.clear();
+    canvas.style.cursor = !paused && phase === 'playing' ? 'none' : '';
+    pauseBtn.textContent = paused
+      ? pauseBtn.dataset.labelResume!
+      : pauseBtn.dataset.labelPause!;
+    pauseBtn.classList.toggle('hidden', phase !== 'playing');
+    if (!running) render(0);
   }
 
   function gameOver() {
     phase = 'over';
+    pauseBtn.classList.add('hidden');
     restartAt = performance.now() + 800;
     pointerFiring = keyFiring = false;
     canvas.style.cursor = '';
@@ -857,6 +889,17 @@ const g = t.game;
       ];
       if (best > 0) lines.push([`${label.best} ${best}`, `13px ${SANS}`, false]);
       drawCenteredText(lines);
+    }
+
+    if (paused) {
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = colors.paper;
+      ctx.fillRect(0, 0, width, height);
+      ctx.globalAlpha = 1;
+      drawCenteredText([
+        [label.paused, `italic 26px ${SERIF}`, true],
+        [label.pausedHint, `13px ${SANS}`, false],
+      ]);
     } else if (phase === 'over') {
       drawCenteredText([
         [label.gameOver, `italic 28px ${SERIF}`, true],
@@ -869,7 +912,7 @@ const g = t.game;
   function loop(now: number) {
     const dt = last ? Math.min(now - last, 50) : 1000 / 60;
     last = now;
-    update(dt);
+    if (!paused) update(dt);
     render(now);
     if (running) rafId = requestAnimationFrame(loop);
   }
@@ -882,6 +925,8 @@ const g = t.game;
   }
 
   function stop() {
+    // Al salir de pantalla la partida queda en pausa en lugar de congelada
+    if (phase === 'playing') setPaused(true);
     running = false;
     pointerFiring = keyFiring = false;
     keys.clear();
@@ -917,9 +962,17 @@ const g = t.game;
 
   canvas.addEventListener('pointermove', aimAt);
 
+  // Sin menú contextual del navegador al hacer clic derecho sobre el juego
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
   canvas.addEventListener('pointerdown', (e) => {
     canvas.focus({ preventScroll: true });
     const { x, y } = aimAt(e);
+
+    if (paused) {
+      setPaused(false);
+      return;
+    }
 
     if (reducedMotion) {
       const hit = rocks.find((r) => Math.hypot(x - r.x, y - r.y) < r.r + 6);
@@ -944,6 +997,7 @@ const g = t.game;
   canvas.addEventListener('pointercancel', releasePointer);
 
   const FIRE_KEYS = ['Space', 'Enter'];
+  const PAUSE_KEYS = ['KeyP', 'Escape'];
   const MOVE_KEYS = [
     'ArrowLeft',
     'ArrowRight',
@@ -957,7 +1011,16 @@ const g = t.game;
 
   canvas.addEventListener('keydown', (e) => {
     if (reducedMotion) return;
-    if (FIRE_KEYS.includes(e.code)) {
+    if (PAUSE_KEYS.includes(e.code)) {
+      e.preventDefault();
+      setPaused(!paused);
+    } else if (paused) {
+      // En pausa solo se reanuda; las flechas tampoco hacen scroll
+      if (FIRE_KEYS.includes(e.code) || MOVE_KEYS.includes(e.code)) {
+        e.preventDefault();
+      }
+      if (FIRE_KEYS.includes(e.code)) setPaused(false);
+    } else if (FIRE_KEYS.includes(e.code)) {
       e.preventDefault();
       if (phase !== 'playing') {
         if (!canStart()) return;
@@ -978,6 +1041,15 @@ const g = t.game;
   canvas.addEventListener('blur', () => {
     keyFiring = false;
     keys.clear();
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    setPaused(!paused);
+    canvas.focus({ preventScroll: true });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) setPaused(true);
   });
 
   replayBtn.addEventListener('click', () => {

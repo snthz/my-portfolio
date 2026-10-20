@@ -4,6 +4,16 @@
 // por idioma (en = principal, es = /es/). Edita aquí, no en los componentes.
 // ─────────────────────────────────────────────────────────────
 
+import type { ImageMetadata } from 'astro';
+import photo from '../assets/me.jpeg';
+import vallenShot from '../assets/projects/vallen.jpg';
+import fallxnShot from '../assets/projects/fallxn-studio.jpg';
+import assahPhotosShot from '../assets/projects/assah-photos.jpg';
+import assahShot from '../assets/projects/assah.jpg';
+import opusPianoShot from '../assets/projects/opus-piano.jpg';
+import financesShot from '../assets/projects/finances.jpg';
+import flashcardsShot from '../assets/projects/flashcards.jpg';
+
 export type Lang = 'en' | 'es';
 
 export const profile = {
@@ -13,7 +23,7 @@ export const profile = {
   website: 'axlsantos.dev',
   github: 'github.com/snthz',
   linkedin: 'linkedin.com/in/axl-santos',
-  photo: '/me.jpeg',
+  photo,
   socials: [
     { label: 'GitHub', url: 'https://github.com/snthz' },
     { label: 'LinkedIn', url: 'https://www.linkedin.com/in/axl-santos/' },
@@ -44,8 +54,8 @@ export interface Project {
   url: string;
   tags: string[];
   featured?: boolean;
-  /** Screenshot en /public (ej. '/projects/vallen.jpg'). */
-  image?: string;
+  /** Captura importada desde src/assets/projects (Astro la optimiza). */
+  image?: ImageMetadata;
 }
 
 export interface Experience {
@@ -118,6 +128,10 @@ export interface Content {
     startHint: string;
     gameOver: string;
     playAgain: string;
+    pause: string;
+    resume: string;
+    paused: string;
+    pausedHint: string;
     score: string;
     best: string;
     facts: (string | { text: string; flag: string })[];
@@ -162,7 +176,7 @@ export const content: Record<Lang, Content> = {
     game: {
       title: 'Space defense',
       instructions:
-        'Move with the mouse or arrow keys, click or hold Space to shoot. Blast the ? meteors to unlock facts about me — and dodge the enemy fire.',
+        'Move with the mouse or arrow keys, click or hold Space to shoot. Blast the ? meteors to unlock facts about me — and dodge the enemy fire. Press P to pause.',
       complete: 'You unlocked my whole profile — keep going for a high score.',
       replay: 'replay',
       disable: 'hide minigame',
@@ -171,6 +185,10 @@ export const content: Record<Lang, Content> = {
       startHint: 'mouse or arrows to move · click or Space to shoot',
       gameOver: 'Game over',
       playAgain: 'click to play again',
+      pause: 'pause',
+      resume: 'resume',
+      paused: 'Paused',
+      pausedHint: 'click or press P to resume',
       score: 'score',
       best: 'best',
       facts: [
@@ -190,7 +208,7 @@ export const content: Record<Lang, Content> = {
         url: 'https://vallen.app/',
         tags: ['SaaS', 'Next.js', 'WhatsApp API', 'Analytics'],
         featured: true,
-        image: '/projects/vallen.jpg',
+        image: vallenShot,
       },
       {
         name: 'Fallxn Studio',
@@ -199,7 +217,7 @@ export const content: Record<Lang, Content> = {
         url: 'https://fallxn.studio/en',
         tags: ['Studio', 'Web', 'Custom software'],
         featured: true,
-        image: '/projects/fallxn-studio.jpg',
+        image: fallxnShot,
       },
       {
         name: 'Assah Photography',
@@ -207,7 +225,7 @@ export const content: Record<Lang, Content> = {
           'Professional portfolio for a maternity and family photographer, focused on performance and imagery.',
         url: 'https://assahphotos.com/',
         tags: ['Web', 'Portfolio'],
-        image: '/projects/assah-photos.jpg',
+        image: assahPhotosShot,
       },
       {
         name: 'ASSAH',
@@ -215,7 +233,7 @@ export const content: Record<Lang, Content> = {
           'Online store for a Honduran print studio: printed and custom apparel, collections, and nationwide shipping.',
         url: 'https://assah.co/',
         tags: ['E-commerce', 'Web'],
-        image: '/projects/assah.jpg',
+        image: assahShot,
       },
     ],
     tools: [
@@ -225,7 +243,7 @@ export const content: Record<Lang, Content> = {
           'Free course to learn to read music and play the piano, with self-grading exercises, sheet music, and learning paths.',
         url: 'https://opuspiano.app/',
         tags: ['Music', 'Learning'],
-        image: '/projects/opus-piano.jpg',
+        image: opusPianoShot,
       },
       {
         name: 'Finances',
@@ -233,7 +251,7 @@ export const content: Record<Lang, Content> = {
           'Personal finance app that reads my bank notification emails and turns every purchase into a categorized transaction, with budgets.',
         url: 'https://finances.fallxn.dev/',
         tags: ['Finance', 'Automation'],
-        image: '/projects/finances.jpg',
+        image: financesShot,
       },
       {
         name: 'Flashcards',
@@ -241,7 +259,7 @@ export const content: Record<Lang, Content> = {
           'Anki-compatible spaced repetition app I use to learn English with my Anki decks, on any device.',
         url: 'https://flashcards.fallxn.dev/',
         tags: ['Learning', 'Anki'],
-        image: '/projects/flashcards.jpg',
+        image: flashcardsShot,
       },
     ],
     experience: [
@@ -448,7 +466,7 @@ export const content: Record<Lang, Content> = {
     game: {
       title: 'Defensa espacial',
       instructions:
-        'Muévete con el mouse o las flechas, haz clic o mantén Espacio para disparar. Destruye los meteoritos ? para desbloquear datos sobre mí — y esquiva el fuego enemigo.',
+        'Muévete con el mouse o las flechas, haz clic o mantén Espacio para disparar. Destruye los meteoritos ? para desbloquear datos sobre mí — y esquiva el fuego enemigo. Pulsa P para pausar.',
       complete: 'Desbloqueaste todo mi perfil — sigue jugando por el récord.',
       replay: 'reiniciar',
       disable: 'ocultar minijuego',
@@ -457,6 +475,10 @@ export const content: Record<Lang, Content> = {
       startHint: 'mouse o flechas para moverte · clic o Espacio para disparar',
       gameOver: 'Fin del juego',
       playAgain: 'clic para jugar de nuevo',
+      pause: 'pausar',
+      resume: 'continuar',
+      paused: 'En pausa',
+      pausedHint: 'haz clic o pulsa P para continuar',
       score: 'puntos',
       best: 'récord',
       facts: [
@@ -476,7 +498,7 @@ export const content: Record<Lang, Content> = {
         url: 'https://vallen.app/',
         tags: ['SaaS', 'Next.js', 'WhatsApp API', 'Analytics'],
         featured: true,
-        image: '/projects/vallen.jpg',
+        image: vallenShot,
       },
       {
         name: 'Fallxn Studio',
@@ -485,7 +507,7 @@ export const content: Record<Lang, Content> = {
         url: 'https://fallxn.studio/en',
         tags: ['Estudio', 'Web', 'Software a medida'],
         featured: true,
-        image: '/projects/fallxn-studio.jpg',
+        image: fallxnShot,
       },
       {
         name: 'Assah Photography',
@@ -493,7 +515,7 @@ export const content: Record<Lang, Content> = {
           'Portfolio profesional para una fotógrafa de maternidad y familia, enfocado en rendimiento e imagen.',
         url: 'https://assahphotos.com/',
         tags: ['Web', 'Portfolio'],
-        image: '/projects/assah-photos.jpg',
+        image: assahPhotosShot,
       },
       {
         name: 'ASSAH',
@@ -501,7 +523,7 @@ export const content: Record<Lang, Content> = {
           'Tienda en línea para un estudio de estampados hondureño: ropa estampada y personalizada, colecciones y envíos a todo el país.',
         url: 'https://assah.co/',
         tags: ['E-commerce', 'Web'],
-        image: '/projects/assah.jpg',
+        image: assahShot,
       },
     ],
     tools: [
@@ -511,7 +533,7 @@ export const content: Record<Lang, Content> = {
           'Curso gratuito para aprender a leer música y tocar el piano, con ejercicios que se corrigen solos, partituras y rutas de aprendizaje.',
         url: 'https://opuspiano.app/',
         tags: ['Música', 'Aprendizaje'],
-        image: '/projects/opus-piano.jpg',
+        image: opusPianoShot,
       },
       {
         name: 'Finances',
@@ -519,7 +541,7 @@ export const content: Record<Lang, Content> = {
           'App de finanzas personales que lee los correos de notificación de mi banco y convierte cada compra en una transacción categorizada, con presupuestos.',
         url: 'https://finances.fallxn.dev/',
         tags: ['Finanzas', 'Automatización'],
-        image: '/projects/finances.jpg',
+        image: financesShot,
       },
       {
         name: 'Flashcards',
@@ -527,7 +549,7 @@ export const content: Record<Lang, Content> = {
           'App de repetición espaciada compatible con Anki que uso para aprender inglés con mis decks, desde cualquier dispositivo.',
         url: 'https://flashcards.fallxn.dev/',
         tags: ['Aprendizaje', 'Anki'],
-        image: '/projects/flashcards.jpg',
+        image: flashcardsShot,
       },
     ],
     experience: [

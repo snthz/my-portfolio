@@ -1,4 +1,5 @@
 ---
+import { Picture } from 'astro:assets';
 import SectionHeading from './SectionHeading.astro';
 import { content, getLang } from '../data/profile';
 
@@ -28,13 +29,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
             <div class="relative aspect-4/3 overflow-hidden rounded-2xl bg-surface">
               {project.image && (
                 <div class="absolute inset-x-[7%] top-[9%] -bottom-px overflow-hidden rounded-t-lg shadow-2xl ring-1 shadow-black/25 ring-black/5 transition-transform duration-700 ease-out group-hover:-translate-y-2 motion-reduce:transition-none dark:ring-white/10">
-                  <img
+                  <Picture
                     src={project.image}
                     alt=""
-                    width="1440"
-                    height="900"
+                    formats={['avif', 'webp']}
+                    widths={[480, 720, 960, 1280]}
+                    sizes="(min-width: 1152px) 465px, (min-width: 768px) 43vw, 86vw"
                     loading="lazy"
                     decoding="async"
+                    pictureAttributes={{ class: 'block size-full' }}
                     class="size-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
                   />
                 </div>
@@ -105,14 +108,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
                 {project.tags.slice(0, 2).join(' · ')}
               </span>
               {project.image && (
-                <img
+                <Picture
                   src={project.image}
                   alt=""
-                  width="1440"
-                  height="900"
+                  formats={['avif', 'webp']}
+                  widths={[96, 192]}
+                  sizes="96px"
                   loading="lazy"
                   decoding="async"
-                  class="aspect-16/10 w-24 rounded border border-line object-cover object-top pointer-fine:hidden"
+                  pictureAttributes={{ class: 'pointer-fine:hidden' }}
+                  class="aspect-16/10 w-24 rounded border border-line object-cover object-top"
                 />
               )}
               <span
@@ -130,14 +135,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
               <span class="min-h-0 overflow-hidden">
                 <span class="flex items-start gap-6 pt-5 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100">
                   {project.image && (
-                    <img
+                    <Picture
                       src={project.image}
                       alt=""
-                      width="1440"
-                      height="900"
+                      formats={['avif', 'webp']}
+                      widths={[288, 576]}
+                      sizes="288px"
                       loading="lazy"
                       decoding="async"
-                      class="aspect-16/10 w-72 shrink-0 scale-95 rounded-lg border border-line object-cover object-top transition-transform duration-500 ease-out group-hover:scale-100 group-focus-visible:scale-100 motion-reduce:transition-none"
+                      pictureAttributes={{ class: 'shrink-0' }}
+                      class="aspect-16/10 w-72 scale-95 rounded-lg border border-line object-cover object-top transition-transform duration-500 ease-out group-hover:scale-100 group-focus-visible:scale-100 motion-reduce:transition-none"
                     />
                   )}
                   <span class="max-w-sm text-sm leading-relaxed text-muted">{project.description}</span>

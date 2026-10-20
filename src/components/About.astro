@@ -1,4 +1,5 @@
 ---
+import { Picture } from 'astro:assets';
 import SectionHeading from './SectionHeading.astro';
 import { profile, content, stack, getLang } from '../data/profile';
 
@@ -24,13 +25,15 @@ const stats =
   <div class="mt-12 grid gap-12 md:grid-cols-12 md:gap-10">
     <figure class="md:col-span-5" data-animate>
       <div class="overflow-hidden rounded-2xl bg-surface">
-        <img
+        <Picture
           src={profile.photo}
           alt={profile.name}
-          width="853"
-          height="1280"
+          formats={['avif', 'webp']}
+          widths={[400, 640, 853]}
+          sizes="(min-width: 1152px) 440px, (min-width: 768px) 40vw, 100vw"
           loading="lazy"
           decoding="async"
+          pictureAttributes={{ class: 'block' }}
           class="aspect-4/5 w-full object-cover object-[50%_30%]"
         />
       </div>

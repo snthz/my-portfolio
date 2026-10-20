@@ -6,25 +6,25 @@
   --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Newsreader Variable', Georgia, 'Times New Roman', serif;
 
-  --color-paper: #f6f2eb;
-  --color-surface: #ede7dd;
-  --color-line: #dcd4c7;
-  --color-muted: #81776b;
-  --color-soft: #4b443c;
-  --color-ink: #1d1a16;
-  --color-accent: #b4441f;
+  --color-paper: #f7f6f3;
+  --color-surface: #ecebe6;
+  --color-line: #dedcd5;
+  --color-muted: #75726b;
+  --color-soft: #3d3b37;
+  --color-ink: #0b0b0a;
+  --color-accent: #d4521f;
 }
 
-/* Tema oscuro: mismos tokens, tonos cálidos invertidos */
+/* Tema oscuro: negro puro, grises neutros */
 html.dark {
   color-scheme: dark;
-  --color-paper: #15120f;
-  --color-surface: #1e1a16;
-  --color-line: #342e27;
-  --color-muted: #948a7e;
-  --color-soft: #c8bfb2;
-  --color-ink: #f3ede4;
-  --color-accent: #e2733f;
+  --color-paper: #000000;
+  --color-surface: #0f0f0f;
+  --color-line: #222222;
+  --color-muted: #8c8c8c;
+  --color-soft: #c9c9c9;
+  --color-ink: #f5f5f4;
+  --color-accent: #ff7a3d;
 }
 
 html {
@@ -44,6 +44,23 @@ body {
 ::selection {
   background-color: var(--color-accent);
   color: var(--color-paper);
+}
+
+/* Titulares grandes: sans apretada */
+.display {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  color: var(--color-ink);
+}
+
+/* Énfasis en serif itálica dentro de titulares */
+.accent-serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 /* Enlace de texto con subrayado fino que toma el color de acento al pasar */
@@ -66,6 +83,10 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   html.js [data-animate] {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(16px);
+  }
+  /* Líneas del titular: suben desde dentro de su máscara */
+  html.js [data-reveal] > span {
+    transform: translateY(105%);
   }
 }

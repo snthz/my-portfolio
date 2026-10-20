@@ -6,14 +6,11 @@ const t = content[getLang(Astro.currentLocale)];
 const g = t.game;
 ---
 
-<section
-  id="game"
-  class="mx-auto grid max-w-4xl scroll-mt-24 gap-6 border-t border-line px-6 py-20 sm:grid-cols-[11rem_1fr] sm:gap-10"
->
+<section id="game" class="mx-auto max-w-6xl scroll-mt-20 px-6 py-24 sm:py-32">
   <SectionHeading title={g.title} />
-  <div>
+  <div class="mt-8">
   <div class="flex flex-wrap items-center justify-between gap-3" data-animate>
-    <p class="text-soft" data-game-instructions>{g.instructions}</p>
+    <p class="max-w-2xl text-soft" data-game-instructions>{g.instructions}</p>
     <button
       type="button"
       class="link text-sm text-muted"
@@ -27,11 +24,11 @@ const g = t.game;
 
   <div data-game-body>
     <div
-      class="relative mt-6 overflow-hidden rounded-lg border border-line bg-surface"
+      class="relative mt-8 overflow-hidden rounded-2xl border border-line bg-surface"
       data-animate
     >
       <canvas
-        class="block h-90 w-full cursor-pointer touch-none outline-none select-none focus-visible:ring-1 focus-visible:ring-accent sm:h-105"
+        class="block h-90 w-full cursor-pointer sm:h-120 touch-none outline-none select-none focus-visible:ring-1 focus-visible:ring-accent"
         tabindex="0"
         aria-label={g.instructions}
         data-game-canvas
@@ -55,7 +52,7 @@ const g = t.game;
       </button>
     </div>
 
-    <ul class="mt-6 grid gap-x-6 sm:grid-cols-2">
+    <ul class="mt-8 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
       {
         g.facts.map((fact, i) => (
           <li

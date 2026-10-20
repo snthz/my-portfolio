@@ -1,147 +1,154 @@
 ---
 import SectionHeading from './SectionHeading.astro';
-import { content, getLang, type Project } from '../data/profile';
+import { content, getLang } from '../data/profile';
 
-const t = content[getLang(Astro.currentLocale)];
-
-const tabs: { id: string; label: string; items: Project[] }[] = [
-  { id: 'work', label: t.projectTabs.work, items: t.projects },
-  { id: 'tools', label: t.projectTabs.tools, items: t.tools },
-];
+const lang = getLang(Astro.currentLocale);
+const t = content[lang];
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
-<section
-  id="projects"
-  class="mx-auto grid max-w-4xl scroll-mt-24 gap-6 border-t border-line px-6 py-20 sm:grid-cols-[11rem_1fr] sm:gap-10"
->
-  <SectionHeading title={t.sections.projects} />
+<section id="projects" class="mx-auto max-w-6xl scroll-mt-20 px-6 py-24 sm:py-32">
+  <SectionHeading
+    title={t.sections.projects}
+    aside={lang === 'es'
+      ? 'Productos, sitios y herramientas que diseñé, construí y mantengo.'
+      : 'Products, sites and tools I designed, built and maintain.'}
+  />
 
-  <div data-projects>
-    <div
-      role="tablist"
-      class="relative flex gap-6 border-b border-line text-sm"
-      data-animate
-    >
-      {
-        tabs.map((tab, i) => (
-          <button
-            type="button"
-            role="tab"
-            id={`tab-${tab.id}`}
-            aria-controls={`panel-${tab.id}`}
-            aria-selected={i === 0 ? 'true' : 'false'}
-            tabindex={i === 0 ? 0 : -1}
-            class="pb-3 text-muted transition-colors hover:text-ink aria-selected:text-ink"
-            data-tab
-          >
-            {tab.label}
-            <sup class="ml-0.5 text-[0.65rem] tabular-nums">{pad(tab.items.length)}</sup>
-          </button>
-        ))
-      }
-      <span
-        class="absolute -bottom-px left-0 h-px w-0 bg-accent"
-        aria-hidden="true"
-        data-tab-indicator></span>
-    </div>
-
+  <!-- Trabajos: tarjetas grandes con captura -->
+  <h3 class="mt-12 flex items-baseline gap-2 text-sm font-medium text-ink" data-animate>
+    {t.projectTabs.work}
+    <span class="text-muted tabular-nums">{pad(t.projects.length)}</span>
+  </h3>
+  <ul class="mt-6 grid gap-x-6 gap-y-14 md:grid-cols-2">
     {
-      tabs.map((tab, i) => (
-        <div
-          role="tabpanel"
-          id={`panel-${tab.id}`}
-          aria-labelledby={`tab-${tab.id}`}
-          hidden={i !== 0}
-          data-panel
-        >
-          {tab.id === 'tools' && (
-            <p class="mt-5 text-sm text-muted">{t.toolsBlurb}</p>
-          )}
-          <ul class:list={[tab.id === 'tools' && 'mt-3 border-t border-line']} data-project-list>
-            {tab.items.map((project, n) => (
-              <li class="border-b border-line" data-animate data-row>
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group grid grid-cols-[2rem_1fr_auto] items-center gap-x-4 py-5"
-                >
-                  <span class="self-start pt-2 text-xs text-muted tabular-nums">
-                    {pad(n + 1)}
-                  </span>
+      t.projects.map((project) => (
+        <li data-animate>
+          <a href={project.url} target="_blank" rel="noopener noreferrer" class="group block">
+            <div class="relative aspect-4/3 overflow-hidden rounded-2xl bg-surface">
+              {project.image && (
+                <div class="absolute inset-x-[7%] top-[9%] -bottom-px overflow-hidden rounded-t-lg shadow-2xl ring-1 shadow-black/25 ring-black/5 transition-transform duration-700 ease-out group-hover:-translate-y-2 motion-reduce:transition-none dark:ring-white/10">
+                  <img
+                    src={project.image}
+                    alt=""
+                    width="1440"
+                    height="900"
+                    loading="lazy"
+                    decoding="async"
+                    class="size-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
+                  />
+                </div>
+              )}
+              {project.featured && (
+                <span class="absolute top-4 left-4 rounded-full bg-paper/90 px-3 py-1 text-xs font-medium text-ink backdrop-blur">
+                  {t.featured}
+                </span>
+              )}
+              <span
+                class="absolute top-4 right-4 flex size-10 scale-75 items-center justify-center rounded-full bg-ink text-paper opacity-0 transition-[opacity,scale] duration-300 group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100"
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+            </div>
 
-                  <span class="min-w-0">
-                    <span class="flex flex-wrap items-baseline gap-x-3">
-                      <span class="font-serif text-2xl font-medium text-ink transition-[color,translate] duration-300 group-hover:translate-x-1.5 group-hover:text-accent sm:text-3xl">
-                        {project.name}
-                      </span>
-                      {project.featured && (
-                        <span class="text-[0.65rem] tracking-widest text-accent uppercase">
-                          {t.featured}
-                        </span>
-                      )}
-                    </span>
-                    <span class="mt-1 line-clamp-2 text-sm leading-relaxed text-muted pointer-fine:sr-only">
-                      {project.description}
-                    </span>
-                  </span>
-
-                  <span class="flex items-center gap-4">
-                    <span class="hidden text-sm text-muted pointer-fine:inline">
-                      {project.tags.slice(0, 2).join(' · ')}
-                    </span>
-                    {project.image && (
-                      <img
-                        src={project.image}
-                        alt=""
-                        width="1440"
-                        height="900"
-                        loading="lazy"
-                        decoding="async"
-                        class="aspect-16/10 w-24 rounded border border-line object-cover object-top pointer-fine:hidden"
-                      />
-                    )}
-                    <span
-                      class="hidden text-muted transition-[color,rotate] duration-300 group-hover:rotate-45 group-hover:text-accent pointer-fine:inline"
-                      aria-hidden="true"
-                    >
-                      ↗
-                    </span>
-                  </span>
-
-                  {/* Panel que se despliega dentro de la fila al pasar el mouse */}
-                  <span
-                    class="col-span-2 col-start-2 hidden grid-rows-[0fr] transition-[grid-template-rows] duration-500 ease-out group-hover:grid-rows-[1fr] group-focus-visible:grid-rows-[1fr] pointer-fine:grid motion-reduce:transition-none"
-                    aria-hidden="true"
-                  >
-                    <span class="min-h-0 overflow-hidden">
-                      <span class="flex items-start gap-6 pt-5 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100">
-                        {project.image && (
-                          <img
-                            src={project.image}
-                            alt=""
-                            width="1440"
-                            height="900"
-                            loading="lazy"
-                            decoding="async"
-                            class="aspect-16/10 w-64 shrink-0 scale-95 rounded-md border border-line object-cover object-top transition-transform duration-500 ease-out group-hover:scale-100 group-focus-visible:scale-100 motion-reduce:transition-none"
-                          />
-                        )}
-                        <span class="max-w-sm text-sm leading-relaxed text-muted">
-                          {project.description}
-                        </span>
-                      </span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+            <div class="mt-5 flex items-start justify-between gap-6">
+              <div class="min-w-0">
+                <p class="text-2xl font-semibold tracking-tight text-ink transition-colors group-hover:text-accent sm:text-3xl">
+                  {project.name}
+                </p>
+                <p class="mt-2 line-clamp-2 max-w-md leading-relaxed text-soft">
+                  {project.description}
+                </p>
+              </div>
+              <p class="hidden shrink-0 pt-2 text-right text-sm leading-relaxed text-muted sm:block">
+                {project.tags.slice(0, 2).map((tag) => <span class="block">{tag}</span>)}
+              </p>
+            </div>
+          </a>
+        </li>
       ))
     }
+  </ul>
+
+  <!-- Herramientas personales: filas que despliegan la captura al pasar el mouse -->
+  <div class="mt-24 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2" data-animate>
+    <h3 class="flex items-baseline gap-2 text-sm font-medium text-ink">
+      {t.projectTabs.tools}
+      <span class="text-muted tabular-nums">{pad(t.tools.length)}</span>
+    </h3>
+    <p class="text-sm text-muted">{t.toolsBlurb}</p>
   </div>
+  <ul class="mt-6 border-t border-line" data-project-list>
+    {
+      t.tools.map((project, n) => (
+        <li class="border-b border-line" data-animate data-row>
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group grid grid-cols-[2.5rem_1fr_auto] items-center gap-x-4 py-6"
+          >
+            <span class="self-start pt-2 text-sm text-muted tabular-nums">{pad(n + 1)}</span>
+
+            <span class="min-w-0">
+              <span class="block text-2xl font-semibold tracking-tight text-ink transition-[color,translate] duration-300 group-hover:translate-x-1.5 group-hover:text-accent sm:text-4xl">
+                {project.name}
+              </span>
+              <span class="mt-1 line-clamp-2 text-sm leading-relaxed text-muted pointer-fine:sr-only">
+                {project.description}
+              </span>
+            </span>
+
+            <span class="flex items-center gap-4">
+              <span class="hidden text-sm text-muted pointer-fine:inline">
+                {project.tags.slice(0, 2).join(' · ')}
+              </span>
+              {project.image && (
+                <img
+                  src={project.image}
+                  alt=""
+                  width="1440"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                  class="aspect-16/10 w-24 rounded border border-line object-cover object-top pointer-fine:hidden"
+                />
+              )}
+              <span
+                class="hidden size-9 items-center justify-center rounded-full border border-line text-muted transition-[color,rotate,border-color] duration-300 group-hover:rotate-45 group-hover:border-accent group-hover:text-accent pointer-fine:flex"
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+            </span>
+
+            <span
+              class="col-span-2 col-start-2 hidden grid-rows-[0fr] transition-[grid-template-rows] duration-500 ease-out group-hover:grid-rows-[1fr] group-focus-visible:grid-rows-[1fr] pointer-fine:grid motion-reduce:transition-none"
+              aria-hidden="true"
+            >
+              <span class="min-h-0 overflow-hidden">
+                <span class="flex items-start gap-6 pt-5 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100">
+                  {project.image && (
+                    <img
+                      src={project.image}
+                      alt=""
+                      width="1440"
+                      height="900"
+                      loading="lazy"
+                      decoding="async"
+                      class="aspect-16/10 w-72 shrink-0 scale-95 rounded-lg border border-line object-cover object-top transition-transform duration-500 ease-out group-hover:scale-100 group-focus-visible:scale-100 motion-reduce:transition-none"
+                    />
+                  )}
+                  <span class="max-w-sm text-sm leading-relaxed text-muted">{project.description}</span>
+                </span>
+              </span>
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
 </section>
 
 <style>
@@ -155,57 +162,3 @@ const pad = (n: number) => String(n).padStart(2, '0');
     }
   }
 </style>
-
-<script>
-  import { gsap } from 'gsap';
-
-  const root = document.querySelector<HTMLElement>('[data-projects]')!;
-  const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-  const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
-  const indicator = root.querySelector<HTMLElement>('[data-tab-indicator]')!;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // ── Pestañas ────────────────────────────────────────────────
-  function moveIndicator(tab: HTMLElement, animate = true) {
-    gsap.to(indicator, {
-      x: tab.offsetLeft,
-      width: tab.offsetWidth,
-      duration: animate && !reduced ? 0.45 : 0,
-      ease: 'power3.out',
-    });
-  }
-
-  function select(index: number) {
-    tabs.forEach((tab, i) => {
-      const active = i === index;
-      tab.setAttribute('aria-selected', String(active));
-      tab.tabIndex = active ? 0 : -1;
-      panels[i].hidden = !active;
-    });
-    moveIndicator(tabs[index]);
-
-    const rows = panels[index].querySelectorAll('[data-row]');
-    gsap.fromTo(
-      rows,
-      { opacity: 0, y: reduced ? 0 : 14 },
-      { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.06, overwrite: true }
-    );
-  }
-
-  tabs.forEach((tab, i) => {
-    tab.addEventListener('click', () => select(i));
-    tab.addEventListener('keydown', (e) => {
-      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (!step) return;
-      const next = (i + step + tabs.length) % tabs.length;
-      tabs[next].focus();
-      select(next);
-    });
-  });
-
-  moveIndicator(tabs[0], false);
-  addEventListener('resize', () => {
-    const active = tabs.find((t) => t.getAttribute('aria-selected') === 'true');
-    if (active) moveIndicator(active, false);
-  });
-</script>

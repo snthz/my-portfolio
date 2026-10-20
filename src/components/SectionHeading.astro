@@ -1,11 +1,17 @@
 ---
 interface Props {
   title: string;
+  /** Texto corto a la derecha del título (ej. un contador o una nota). */
+  aside?: string;
 }
 
-const { title } = Astro.props;
+const { title, aside } = Astro.props;
 ---
 
-<h2 class="font-serif text-2xl font-medium tracking-tight text-ink sm:text-[1.7rem]" data-animate>
-  {title}
-</h2>
+<div
+  class="flex flex-wrap items-end justify-between gap-x-8 gap-y-3 border-b border-line pb-6"
+  data-animate
+>
+  <h2 class="display text-5xl sm:text-7xl">{title}</h2>
+  {aside && <p class="max-w-xs text-sm leading-relaxed text-muted">{aside}</p>}
+</div>
